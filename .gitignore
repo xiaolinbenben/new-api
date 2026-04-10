@@ -27,3 +27,6 @@ data/
 .gomodcache/
 .gocache-temp
 .gopath
+
+.air.toml
+tmp

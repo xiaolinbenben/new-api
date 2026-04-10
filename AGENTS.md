@@ -1,4 +1,4 @@
-# AGENTS.md — new-api 项目约定
+# AGENTS.md — terln-api 项目约定
 
 ## 概述
 
