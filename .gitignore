@@ -23,8 +23,6 @@ web/bun.lock
 plans
 .claude
 
-electron/node_modules
-electron/dist
 data/
 .gomodcache/
 .gocache-temp
