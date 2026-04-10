@@ -1,0 +1,66 @@
+version: '3'
+
+tasks:
+  # 构建前端和后端
+  build:
+    desc: 构建前端和后端
+    cmds:
+      - echo "Building frontend..."
+      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
+      - echo "Building backend..."
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o new-api main.go
+      - echo "Build complete!"
+
+  # 构建前端
+  build-frontend:
+    desc: 构建前端
+    cmds:
+      - echo "Building frontend..."
+      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
+      - echo "Frontend build complete!"
+
+  # 启动后端开发服务器
+  start-backend:
+    desc: 启动后端开发服务器
+    cmds:
+      - echo "Starting backend dev server..."
+      - go run main.go
+
+  # 构建前端并启动后端
+  all:
+    desc: 构建前端并启动后端
+    cmds:
+      - task: build-frontend
+      - task: start-backend
+
+  # 启动 Docker Compose 服务
+  up:
+    desc: 启动 Docker Compose 服务
+    cmds:
+      - docker-compose up -d
+
+  # 停止 Docker Compose 服务
+  down:
+    desc: 停止 Docker Compose 服务
+    cmds:
+      - docker-compose down
+
+  # 查看日志
+  logs:
+    desc: 查看 Docker Compose 日志
+    cmds:
+      - docker-compose logs -f
+
+  # 重新构建并重启服务
+  rebuild:
+    desc: 重新构建并重启服务
+    cmds:
+      - task: build
+      - task: down
+      - task: up
+
+  # 重启服务
+  restart:
+    desc: 重启 Docker Compose 服务
+    cmds:
+      - docker-compose restart

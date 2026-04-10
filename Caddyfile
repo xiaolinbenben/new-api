@@ -1,0 +1,5 @@
+# Replace with your domain
+api.terln.com {
+    encode zstd gzip
+    reverse_proxy terln-api:3000
+}
