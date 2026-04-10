@@ -17,22 +17,22 @@
 
 分层架构：Router -> Controller -> Service -> Model
 
-```
-router/        — HTTP 路由（API、relay、dashboard、web）
-controller/    — 请求处理器
-service/       — 业务逻辑
-model/         — 数据模型和数据库访问（GORM）
-relay/         — AI API 中继/代理及提供商适配器
-  relay/channel/ — 提供商特定适配器（openai/、claude/、gemini/、aws/ 等）
-middleware/    — 认证、速率限制、CORS、日志、分发
-setting/       — 配置管理（ratio、model、operation、system、performance）
+```markdown
 common/        — 共享工具（JSON、加密、Redis、环境、速率限制等）
-dto/           — 数据传输对象（请求/响应结构体）
 constant/      — 常量（API 类型、渠道类型、上下文键）
-types/         — 类型定义（中继格式、文件源、错误）
+controller/    — 请求处理器
+dto/           — 数据传输对象（请求/响应结构体）
 i18n/          — 后端国际化（go-i18n，en/zh）
+middleware/    — 认证、速率限制、CORS、日志、分发
+model/         — 数据模型和数据库访问（GORM）
 oauth/         — OAuth 提供商实现
 pkg/           — 内部包（cachex、ionet）
+relay/         — AI API 中继/代理及提供商适配器
+  relay/channel/ — 提供商特定适配器（openai/、claude/、gemini/、aws/ 等）
+router/        — HTTP 路由（API、relay、dashboard、web）
+service/       — 业务逻辑
+setting/       — 配置管理（ratio、model、operation、system、performance）
+types/         — 类型定义（中继格式、文件源、错误）
 web/           — React 前端
   web/src/i18n/  — 前端国际化（i18next，zh/en/fr/ru/ja/vi）
 ```
