@@ -1,30 +1,35 @@
-FROM oven/bun:1@sha256:0733e50325078969732ebe3b15ce4c4be5082f18c4ac1a0f0ca4839c2e4e42a7 AS builder
+# 阶段1：构建前端
+FROM oven/bun:1-alpine AS web-builder
 
 WORKDIR /build
-COPY web/package.json .
-COPY web/bun.lock .
+COPY web/package.json web/bun.lock ./
 RUN bun install
-COPY ./web .
-COPY ./VERSION .
-RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat VERSION) bun run build
+COPY web/ ./
+ARG VERSION=dev
+RUN DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=${VERSION} bun run build
 
-FROM golang:1.23-alpine AS builder2
+# 阶段2：构建 Go 后端
+FROM golang:1.23-alpine AS go-builder
 ENV GO111MODULE=on CGO_ENABLED=0
 
 ARG TARGETOS
 ARG TARGETARCH
+ARG VERSION=dev
+
 ENV GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64}
 ENV GOEXPERIMENT=greenteagc
 
 WORKDIR /build
 
-ADD go.mod go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-COPY --from=builder /build/dist ./web/dist
-RUN go build -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=$(cat VERSION)'" -o terln-api
+# 复制前端构建产物到 web/dist 目录，Go embed 会将其打包进二进制
+COPY --from=web-builder /build/dist ./web/dist
+RUN go build -ldflags "-s -w -X 'github.com/QuantumNous/new-api/common.Version=${VERSION}'" -o terln-api
 
+# 阶段3：运行环境
 FROM debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0f2837acbf89ab020a
 
 RUN apt-get update \
@@ -32,7 +37,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
 
-COPY --from=builder2 /build/terln-api /
+COPY --from=go-builder /build/terln-api /
 EXPOSE 3000
 WORKDIR /data
 ENTRYPOINT ["/terln-api"]

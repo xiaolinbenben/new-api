@@ -29,6 +29,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        # 可通过环境变量或命令行传递版本号: VERSION=v1.0.0 docker-compose build
+        VERSION: ${VERSION:-latest}
     image: terln-api:latest
     container_name: terln-api
     restart: always
