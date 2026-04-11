@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mock 上游控制台</title>
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <div id="login-panel" class="overlay">
+      <form id="login-form" class="panel login-card">
+        <h1>Mock 上游控制台</h1>
+        <p>使用本地管理密码登录并控制 worker。</p>
+        <label>
+          管理密码
+          <input type="password" id="login-password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">登录</button>
+        <p id="login-error" class="error"></p>
+      </form>
+    </div>
+
+    <header class="hero">
+      <div>
+        <h1>Mock 上游控制面板</h1>
+        <p>在一个页面里管理 worker 进程、随机上游行为和运行统计。</p>
+      </div>
+      <div class="hero-actions">
+        <button id="refresh-all" type="button">刷新</button>
+        <button id="logout" type="button" class="secondary">退出登录</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>总览</h2>
+          <span id="worker-status-badge" class="badge">未知</span>
+        </div>
+        <div id="overview-cards" class="cards"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>服务控制</h2>
+          <div class="button-row">
+            <button id="worker-start" type="button">启动 Worker</button>
+            <button id="worker-stop" type="button" class="warn">停止 Worker</button>
+            <button id="worker-restart" type="button" class="secondary">重启 Worker</button>
+          </div>
+        </div>
+        <p id="action-status" class="muted"></p>
+        <div class="grid two">
+          <label>
+            Worker 端口
+            <input type="number" id="worker-port" min="1" max="65535" />
+          </label>
+          <label>
+            PProf 端口
+            <input type="number" id="worker-pprof-port" min="1" max="65535" />
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="worker-require-auth" />
+            <span>要求携带 API Key 请求头</span>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="worker-enable-pprof" />
+            <span>启用 PProf</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>全局随机参数</h2>
+          <button id="save-config" type="button">保存配置</button>
+        </div>
+        <div class="grid three">
+          <label>
+            随机模式
+            <select id="random-mode">
+              <option value="true_random">true_random</option>
+              <option value="seeded">seeded</option>
+            </select>
+          </label>
+          <label>
+            固定种子
+            <input type="number" id="random-seed" />
+          </label>
+          <label>
+            模型列表
+            <textarea id="worker-models" rows="4"></textarea>
+          </label>
+          <label>
+            延迟最小值 (ms)
+            <input type="number" id="latency-min" min="0" />
+          </label>
+          <label>
+            延迟最大值 (ms)
+            <input type="number" id="latency-max" min="0" />
+          </label>
+          <label>
+            通用错误率
+            <input type="number" id="error-rate" step="0.001" min="0" max="1" />
+          </label>
+          <label>
+            429 概率
+            <input type="number" id="rate-429" step="0.001" min="0" max="1" />
+          </label>
+          <label>
+            500 概率
+            <input type="number" id="rate-500" step="0.001" min="0" max="1" />
+          </label>
+          <label>
+            超时概率
+            <input type="number" id="rate-timeout" step="0.001" min="0" max="1" />
+          </label>
+          <label>
+            Token 最小值
+            <input type="number" id="tokens-min" min="1" />
+          </label>
+          <label>
+            Token 最大值
+            <input type="number" id="tokens-max" min="1" />
+          </label>
+          <label>
+            SSE 分块最小值
+            <input type="number" id="chunks-min" min="1" />
+          </label>
+          <label>
+            SSE 分块最大值
+            <input type="number" id="chunks-max" min="1" />
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Chat / Responses</h2>
+        </div>
+        <div class="grid two">
+          <fieldset>
+            <legend>Chat 配置</legend>
+            <div class="grid two">
+              <label>文本 Token 最小值 <input type="number" id="chat-text-min" min="1" /></label>
+              <label>文本 Token 最大值 <input type="number" id="chat-text-max" min="1" /></label>
+              <label class="toggle"><input type="checkbox" id="chat-allow-stream" /><span>允许流式输出</span></label>
+              <label>Usage 返回概率 <input type="number" id="chat-usage" step="0.001" min="0" max="1" /></label>
+              <label>Tool Call 概率 <input type="number" id="chat-tool-prob" step="0.001" min="0" max="1" /></label>
+              <label>MCP 风格概率 <input type="number" id="chat-mcp-prob" step="0.001" min="0" max="1" /></label>
+              <label>Tool 数量最小值 <input type="number" id="chat-tool-min" min="1" /></label>
+              <label>Tool 数量最大值 <input type="number" id="chat-tool-max" min="1" /></label>
+              <label>参数字节最小值 <input type="number" id="chat-args-min" min="1" /></label>
+              <label>参数字节最大值 <input type="number" id="chat-args-max" min="1" /></label>
+              <label>最终回答概率 <input type="number" id="chat-final-prob" step="0.001" min="0" max="1" /></label>
+              <label>指纹字段概率 <input type="number" id="chat-fp-prob" step="0.001" min="0" max="1" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Responses 配置</legend>
+            <div class="grid two">
+              <label>文本 Token 最小值 <input type="number" id="resp-text-min" min="1" /></label>
+              <label>文本 Token 最大值 <input type="number" id="resp-text-max" min="1" /></label>
+              <label class="toggle"><input type="checkbox" id="resp-allow-stream" /><span>允许流式输出</span></label>
+              <label>Usage 返回概率 <input type="number" id="resp-usage" step="0.001" min="0" max="1" /></label>
+              <label>Tool Call 概率 <input type="number" id="resp-tool-prob" step="0.001" min="0" max="1" /></label>
+              <label>MCP 风格概率 <input type="number" id="resp-mcp-prob" step="0.001" min="0" max="1" /></label>
+              <label>Tool 数量最小值 <input type="number" id="resp-tool-min" min="1" /></label>
+              <label>Tool 数量最大值 <input type="number" id="resp-tool-max" min="1" /></label>
+              <label>参数字节最小值 <input type="number" id="resp-args-min" min="1" /></label>
+              <label>参数字节最大值 <input type="number" id="resp-args-max" min="1" /></label>
+              <label>最终回答概率 <input type="number" id="resp-final-prob" step="0.001" min="0" max="1" /></label>
+              <label>指纹字段概率 <input type="number" id="resp-fp-prob" step="0.001" min="0" max="1" /></label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>图片 / 视频</h2>
+        </div>
+        <div class="grid two">
+          <fieldset>
+            <legend>图片配置</legend>
+            <div class="grid two">
+              <label>尺寸列表 <textarea id="image-sizes" rows="4"></textarea></label>
+              <label>水印文本列表 <textarea id="image-watermarks" rows="4"></textarea></label>
+              <label>背景色板 <textarea id="image-palette" rows="4"></textarea></label>
+              <label>返回 URL 概率 <input type="number" id="image-url-rate" step="0.001" min="0" max="1" /></label>
+              <label>添加水印概率 <input type="number" id="image-watermark-rate" step="0.001" min="0" max="1" /></label>
+              <label>图片数量最小值 <input type="number" id="image-count-min" min="1" /></label>
+              <label>图片数量最大值 <input type="number" id="image-count-max" min="1" /></label>
+              <label>图片字节最小值 <input type="number" id="image-bytes-min" min="1024" /></label>
+              <label>图片字节最大值 <input type="number" id="image-bytes-max" min="1024" /></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>视频配置</legend>
+            <div class="grid two">
+              <label>时长最小值 (s) <input type="number" id="video-duration-min" step="0.1" min="0.5" /></label>
+              <label>时长最大值 (s) <input type="number" id="video-duration-max" step="0.1" min="0.5" /></label>
+              <label>分辨率列表 <textarea id="video-resolutions" rows="4"></textarea></label>
+              <label>失败概率 <input type="number" id="video-failure-rate" step="0.001" min="0" max="1" /></label>
+              <label>FPS 最小值 <input type="number" id="video-fps-min" min="1" /></label>
+              <label>FPS 最大值 <input type="number" id="video-fps-max" min="1" /></label>
+              <label>轮询间隔最小值 (ms) <input type="number" id="video-poll-min" min="100" /></label>
+              <label>轮询间隔最大值 (ms) <input type="number" id="video-poll-max" min="100" /></label>
+              <label>视频字节最小值 <input type="number" id="video-bytes-min" min="1024" /></label>
+              <label>视频字节最大值 <input type="number" id="video-bytes-max" min="1024" /></label>
+              <label>进度抖动最小值 <input type="number" id="video-jitter-min" min="0" /></label>
+              <label>进度抖动最大值 <input type="number" id="video-jitter-max" min="0" /></label>
+            </div>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>数据查看</h2>
+          <button id="reset-stats" type="button" class="secondary">重置统计</button>
+        </div>
+        <div class="table-group">
+          <h3>路由统计</h3>
+          <table id="routes-table">
+            <thead>
+              <tr>
+                <th>路由</th>
+                <th>请求数</th>
+                <th>成功数</th>
+                <th>错误数</th>
+                <th>活跃中</th>
+                <th>平均 ms</th>
+                <th>P50</th>
+                <th>P95</th>
+                <th>最后状态码</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="grid three">
+          <div class="table-group">
+            <h3>最近错误</h3>
+            <table id="errors-table"><tbody></tbody></table>
+          </div>
+          <div class="table-group">
+            <h3>最近请求</h3>
+            <table id="requests-table"><tbody></tbody></table>
+          </div>
+          <div class="table-group">
+            <h3>最近视频任务</h3>
+            <table id="videos-table"><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/assets/app.js" defer></script>
+  </body>
+</html>
