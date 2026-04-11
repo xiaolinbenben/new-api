@@ -1,9 +1,8 @@
-# New-API Docker Compose 配置
+# terln-api Docker Compose 配置
 #
 # 前置条件:
-#   1. 本地构建项目: task build
-#   2. 复制 .env.example 到 .env 并进行配置
-#   3. 运行: task up
+#   1. 复制 .env.example 到 .env 并进行配置
+#   2. 运行: docker-compose up -d
 #
 # ⚠️  重要提示: 部署到生产环境前，请修改所有默认密码!
 
@@ -27,17 +26,16 @@ services:
       - terln-api-network
 
   terln-api:
-    image: alpine:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: terln-api:latest
     container_name: terln-api
     restart: always
-    command: ["/app/terln-api", "--log-dir", "/app/logs"]
     expose:
       - "3000"
     volumes:
-      - ./terln-api:/app/terln-api
-      - ./web/dist:/app/web/dist
       - ./data:/data
-      - ./logs:/app/logs
     environment:
       SQL_DSN: postgresql://root:${POSTGRES_PASSWORD}@postgres:5432/terln-api
       REDIS_CONN_STRING: redis://redis:6379
