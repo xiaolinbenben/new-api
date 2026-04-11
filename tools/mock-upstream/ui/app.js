@@ -4,6 +4,41 @@ const loginError = document.getElementById('login-error');
 const overviewCards = document.getElementById('overview-cards');
 const actionStatus = document.getElementById('action-status');
 const workerStatusBadge = document.getElementById('worker-status-badge');
+const sidebarHealth = document.getElementById('sidebar-health');
+const heroSummary = document.getElementById('hero-summary');
+const overviewRuntime = document.getElementById('overview-runtime');
+const overviewStatusCodes = document.getElementById('overview-status-codes');
+const tabTitle = document.getElementById('tab-title');
+const tabSubtitle = document.getElementById('tab-subtitle');
+const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
+const tabPanels = Array.from(document.querySelectorAll('.tab-panel'));
+
+const tabMeta = {
+  overview: {
+    title: '总览',
+    subtitle: '查看 worker 状态、吞吐和主要运行指标。',
+  },
+  service: {
+    title: '服务控制',
+    subtitle: '管理 worker 生命周期、端口和鉴权相关开关。',
+  },
+  random: {
+    title: '全局随机',
+    subtitle: '调整随机模式、全局错误率、延迟和默认 token 范围。',
+  },
+  conversation: {
+    title: '对话与响应',
+    subtitle: '分别控制 Chat 和 Responses 的流式、tool call 与 MCP 风格参数。',
+  },
+  media: {
+    title: '图片与视频',
+    subtitle: '控制图片生成尺寸、视频任务推进、失败概率和媒体载荷范围。',
+  },
+  data: {
+    title: '数据查看',
+    subtitle: '查看路由统计、最近错误、最近请求和视频任务事件。',
+  },
+};
 
 let pollTimer = null;
 
@@ -54,12 +89,25 @@ function hideLogin() {
 
 function setStatus(message, isError = false) {
   actionStatus.textContent = message || '';
-  actionStatus.className = isError ? 'error' : 'muted';
+  actionStatus.className = isError ? 'error status-text' : 'muted status-text';
 }
 
 function setBadge(status) {
   workerStatusBadge.textContent = zhStatus(status);
   workerStatusBadge.className = `badge ${status === 'running' ? 'running' : 'stopped'}`;
+}
+
+function activateTab(tab) {
+  tabButtons.forEach((button) => {
+    button.classList.toggle('active', button.dataset.tab === tab);
+  });
+  tabPanels.forEach((panel) => {
+    panel.classList.toggle('active', panel.dataset.tabPanel === tab);
+  });
+  const meta = tabMeta[tab] || tabMeta.overview;
+  tabTitle.textContent = meta.title;
+  tabSubtitle.textContent = meta.subtitle;
+  window.localStorage.setItem('mock-upstream-active-tab', tab);
 }
 
 function joinLines(values = []) {
@@ -206,9 +254,8 @@ function gatherConfig() {
 
 function renderOverview(runtime, summary) {
   setBadge(runtime.worker.status);
+
   const cards = [
-    ['Worker 端口', runtime.config.worker.port],
-    ['Worker PID', runtime.worker.pid || '-'],
     ['总请求数', summary?.total_requests ?? 0],
     ['QPS (1分钟)', Number(summary?.current_qps ?? 0).toFixed(2)],
     ['错误率', `${((summary?.error_rate ?? 0) * 100).toFixed(2)}%`],
@@ -226,10 +273,67 @@ function renderOverview(runtime, summary) {
         </div>`,
     )
     .join('');
+
+  sidebarHealth.innerHTML = [
+    ['控制台端口', runtime.control_port],
+    ['Worker 端口', runtime.config.worker.port],
+    ['Worker PID', runtime.worker.pid || '-'],
+    ['运行时长', `${runtime.worker.uptime_sec || 0}s`],
+  ]
+    .map(
+      ([label, val]) => `
+        <div class="mini-stat">
+          <span>${label}</span>
+          <strong>${val}</strong>
+        </div>`,
+    )
+    .join('');
+
+  heroSummary.innerHTML = [
+    ['状态', zhStatus(runtime.worker.status)],
+    ['QPS', Number(summary?.current_qps ?? 0).toFixed(2)],
+    ['错误率', `${((summary?.error_rate ?? 0) * 100).toFixed(2)}%`],
+  ]
+    .map(
+      ([label, val]) => `
+        <div class="hero-pill">
+          <span>${label}</span>
+          <strong>${val}</strong>
+        </div>`,
+    )
+    .join('');
+
+  const runtimeItems = [
+    ['Worker 地址', runtime.worker.public_base || '-'],
+    ['PProf 地址', runtime.worker.pprof_url || '未启用'],
+    ['鉴权要求', runtime.config.worker.require_auth ? '已启用' : '未启用'],
+    ['随机模式', runtime.config.random.mode],
+    ['模型数量', runtime.config.worker.models.length],
+    ['数据目录', runtime.data_dir],
+  ];
+  overviewRuntime.innerHTML = runtimeItems
+    .map(
+      ([label, val]) => `
+        <div class="detail-item">
+          <span>${label}</span>
+          <strong>${val}</strong>
+        </div>`,
+    )
+    .join('');
+
+  const codes = Object.entries(summary?.status_codes || {}).sort(([a], [b]) => Number(a) - Number(b));
+  overviewStatusCodes.innerHTML =
+    codes.length === 0
+      ? '<span class="chip empty">暂无状态码数据</span>'
+      : codes.map(([code, count]) => `<span class="chip">${code} · ${count}</span>`).join('');
 }
 
 function renderRoutes(routes) {
   const tbody = document.querySelector('#routes-table tbody');
+  if (!routes.items.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无路由统计</td></tr>';
+    return;
+  }
   tbody.innerHTML = routes.items
     .map(
       (item) => `
@@ -248,8 +352,12 @@ function renderRoutes(routes) {
     .join('');
 }
 
-function renderSimpleTable(selector, rows, formatter) {
+function renderSimpleTable(selector, rows, formatter, emptyText) {
   const tbody = document.querySelector(`${selector} tbody`);
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td class="empty-cell">${emptyText}</td></tr>`;
+    return;
+  }
   tbody.innerHTML = rows
     .map((row) => `<tr><td>${formatter(row)}</td></tr>`)
     .join('');
@@ -263,6 +371,8 @@ function formatTime(value) {
 async function loadRuntime() {
   const [runtime, config] = await Promise.all([api('/api/runtime'), api('/api/config')]);
   fillConfig(config);
+  const runtimeView = { ...runtime, config };
+
   let summary = {
     total_requests: 0,
     current_qps: 0,
@@ -270,6 +380,7 @@ async function loadRuntime() {
     active_requests: 0,
     active_sse: 0,
     video_tasks: 0,
+    status_codes: {},
   };
   let routes = { items: [] };
   let events = { errors: [], requests: [], videos: [] };
@@ -282,25 +393,34 @@ async function loadRuntime() {
     ]);
   }
 
-  renderOverview(runtime, summary);
+  renderOverview(runtimeView, summary);
   renderRoutes(routes);
-  renderSimpleTable('#errors-table', events.errors.slice(0, 10), (row) =>
-    `${formatTime(row.timestamp)} | ${row.route} | ${row.status_code} | ${row.error || '-'}`,
+  renderSimpleTable(
+    '#errors-table',
+    events.errors.slice(0, 10),
+    (row) => `${formatTime(row.timestamp)} | ${row.route} | ${row.status_code} | ${row.error || '-'}`,
+    '暂无错误事件',
   );
-  renderSimpleTable('#requests-table', events.requests.slice(0, 10), (row) =>
-    `${formatTime(row.timestamp)} | ${row.method} ${row.route} | ${row.status_code} | ${row.latency_ms}ms`,
+  renderSimpleTable(
+    '#requests-table',
+    events.requests.slice(0, 10),
+    (row) => `${formatTime(row.timestamp)} | ${row.method} ${row.route} | ${row.status_code} | ${row.latency_ms}ms`,
+    '暂无请求事件',
   );
-  renderSimpleTable('#videos-table', events.videos.slice(0, 10), (row) =>
-    `${formatTime(row.timestamp)} | ${row.task_id} | ${row.status} | ${row.resolution} @ ${row.fps}fps`,
+  renderSimpleTable(
+    '#videos-table',
+    events.videos.slice(0, 10),
+    (row) => `${formatTime(row.timestamp)} | ${row.task_id} | ${row.status} | ${row.resolution} @ ${row.fps}fps`,
+    '暂无视频任务',
   );
 }
 
 async function saveConfig() {
   const payload = gatherConfig();
-    await api('/api/config', {
-      method: 'PUT',
-      body: JSON.stringify(payload),
-    });
+  await api('/api/config', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
   setStatus('配置已保存');
   await loadRuntime();
 }
@@ -334,11 +454,25 @@ loginForm.addEventListener('submit', async (event) => {
   }
 });
 
-document.getElementById('save-config').addEventListener('click', () => saveConfig().catch((error) => setStatus(error.message, true)));
-document.getElementById('refresh-all').addEventListener('click', () => loadRuntime().catch((error) => setStatus(error.message, true)));
-document.getElementById('worker-start').addEventListener('click', () => workerAction('/api/worker/start', 'Worker 已启动').catch((error) => setStatus(error.message, true)));
-document.getElementById('worker-stop').addEventListener('click', () => workerAction('/api/worker/stop', 'Worker 已停止').catch((error) => setStatus(error.message, true)));
-document.getElementById('worker-restart').addEventListener('click', () => workerAction('/api/worker/restart', 'Worker 已重启').catch((error) => setStatus(error.message, true)));
+tabButtons.forEach((button) => {
+  button.addEventListener('click', () => activateTab(button.dataset.tab));
+});
+
+document
+  .getElementById('save-config')
+  .addEventListener('click', () => saveConfig().catch((error) => setStatus(error.message, true)));
+document
+  .getElementById('refresh-all')
+  .addEventListener('click', () => loadRuntime().catch((error) => setStatus(error.message, true)));
+document
+  .getElementById('worker-start')
+  .addEventListener('click', () => workerAction('/api/worker/start', 'Worker 已启动').catch((error) => setStatus(error.message, true)));
+document
+  .getElementById('worker-stop')
+  .addEventListener('click', () => workerAction('/api/worker/stop', 'Worker 已停止').catch((error) => setStatus(error.message, true)));
+document
+  .getElementById('worker-restart')
+  .addEventListener('click', () => workerAction('/api/worker/restart', 'Worker 已重启').catch((error) => setStatus(error.message, true)));
 document.getElementById('reset-stats').addEventListener('click', async () => {
   try {
     await api('/api/stats/reset', { method: 'POST', body: '{}' });
@@ -358,4 +492,6 @@ document.getElementById('logout').addEventListener('click', async () => {
   showLogin();
 });
 
+const initialTab = window.localStorage.getItem('mock-upstream-active-tab') || 'overview';
+activateTab(initialTab);
 showLogin();
