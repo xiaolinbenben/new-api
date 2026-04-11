@@ -6,9 +6,9 @@ tasks:
     desc: 构建前端和后端
     cmds:
       - echo "Building frontend..."
-      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
+      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION 2>/dev/null || echo "dev") bun run build
       - echo "Building backend..."
-      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o new-api main.go
+      - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o terln-api main.go
       - echo "Build complete!"
 
   # 构建前端
@@ -16,7 +16,7 @@ tasks:
     desc: 构建前端
     cmds:
       - echo "Building frontend..."
-      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION) bun run build
+      - cd web && bun install && DISABLE_ESLINT_PLUGIN='true' VITE_REACT_APP_VERSION=$(cat ../VERSION 2>/dev/null || echo "dev") bun run build
       - echo "Frontend build complete!"
 
   # 启动后端开发服务器
