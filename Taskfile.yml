@@ -65,20 +65,49 @@ tasks:
     cmds:
       - docker-compose restart
 
-  # 启动 mock-upstream 测试服务器
-  mock:
-    desc: 启动 mock-upstream 测试服务器
+  # 启动测试工作台
+  workbench:
+    desc: 启动测试工作台
     cmds:
-      - cd tools/mock-upstream && go run . control
+      - cd tools/test-workbench && go run . serve
 
-  # 启动 load-tester 控制台
-  loadtest:
-    desc: 启动 load-tester 控制台
+  # 启动测试工作台（使用默认数据目录）
+  workbench-dev:
+    desc: 启动测试工作台开发环境
     cmds:
-      - cd tools/load-tester && go run . control
+      - cd tools/test-workbench && go run . serve --admin-port 18880 --data-dir ./data
 
-  # 构建 load-tester 工具
-  loadtest-build:
-    desc: 构建 load-tester 工具
+  # 启动测试工作台（使用全新临时数据目录，便于回归测试）
+  workbench-clean:
+    desc: 启动全新测试工作台实例
     cmds:
-      - cd tools/load-tester && go build -o load-tester .
+      - mkdir -p /tmp/new-api-test-workbench
+      - rm -rf /tmp/new-api-test-workbench/*
+      - cd tools/test-workbench && go run . serve --admin-port 18880 --data-dir /tmp/new-api-test-workbench
+
+  # 只构建测试工作台前端
+  workbench-web-build:
+    desc: 构建测试工作台前端
+    cmds:
+      - cd tools/test-workbench/web && bun install && bun run build
+
+  # 只运行测试工作台 Go 测试
+  workbench-test:
+    desc: 运行测试工作台 Go 测试
+    cmds:
+      - go test ./tools/test-workbench/...
+
+  # 构建并验证测试工作台
+  workbench-check:
+    desc: 构建并验证测试工作台
+    cmds:
+      - task: workbench-web-build
+      - task: workbench-test
+      - go build ./tools/test-workbench
+
+  # 构建测试工作台
+  workbench-build:
+    desc: 构建测试工作台
+    cmds:
+      - task: workbench-web-build
+      - cd tools/test-workbench && go build -o test-workbench .
