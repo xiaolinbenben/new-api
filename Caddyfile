@@ -3,10 +3,9 @@ api.terln.com {
     encode zstd gzip
 
     # Static files
-    handle /static/* {
-        file_server {
-            root /static
-        }
+    handle_path /static/* {
+        root * /static
+        file_server browse
     }
 
     reverse_proxy terln-api:3000
