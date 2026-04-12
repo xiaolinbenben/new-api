@@ -222,11 +222,12 @@ func (s *configStore) getView() configView {
 	cfg := s.get()
 	return configView{
 		Worker: workerConfig{
-			Port:        cfg.Worker.Port,
-			RequireAuth: cfg.Worker.RequireAuth,
-			EnablePprof: cfg.Worker.EnablePprof,
-			PprofPort:   cfg.Worker.PprofPort,
-			Models:      append([]string(nil), cfg.Worker.Models...),
+			Port:            cfg.Worker.Port,
+			RequireAuth:     cfg.Worker.RequireAuth,
+			EnablePprof:     cfg.Worker.EnablePprof,
+			PprofPort:       cfg.Worker.PprofPort,
+			ManagementToken: cfg.Worker.ManagementToken,
+			Models:          append([]string(nil), cfg.Worker.Models...),
 		},
 		Random:    cfg.Random,
 		Chat:      cfg.Chat,
@@ -251,6 +252,7 @@ func (s *configStore) updateView(view configView) (mockConfig, error) {
 	cfg.Worker.RequireAuth = view.Worker.RequireAuth
 	cfg.Worker.EnablePprof = view.Worker.EnablePprof
 	cfg.Worker.PprofPort = view.Worker.PprofPort
+	cfg.Worker.ManagementToken = view.Worker.ManagementToken
 	cfg.Worker.Models = append([]string(nil), view.Worker.Models...)
 	cfg.Random = view.Random
 	cfg.Chat = view.Chat

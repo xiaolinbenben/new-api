@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	defaultControlPort  = 18080
+	defaultControlPort  = 18090
+	defaultWorkerConfig = "config.json"
 	defaultDataDir      = "./data"
 	defaultAdminPass    = "admin"
-	defaultWorkerConfig = "config.json"
 )
 
 type bootstrapConfig struct {
@@ -49,9 +49,9 @@ func main() {
 
 func runControl(args []string) error {
 	fs := flag.NewFlagSet("control", flag.ContinueOnError)
-	port := fs.Int("port", intEnv("MOCK_UPSTREAM_CONTROL_PORT", defaultControlPort), "control server port")
-	dataDir := fs.String("data-dir", stringEnv("MOCK_UPSTREAM_DATA_DIR", defaultDataDir), "data directory")
-	adminPassword := fs.String("admin-password", stringEnv("MOCK_UPSTREAM_ADMIN_PASSWORD", defaultAdminPass), "control admin password")
+	port := fs.Int("port", intEnv("LOAD_TESTER_CONTROL_PORT", defaultControlPort), "control server port")
+	dataDir := fs.String("data-dir", stringEnv("LOAD_TESTER_DATA_DIR", defaultDataDir), "data directory")
+	adminPassword := fs.String("admin-password", stringEnv("LOAD_TESTER_ADMIN_PASSWORD", defaultAdminPass), "control admin password")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func runWorker(args []string) error {
 		return fmt.Errorf("--config is required")
 	}
 
-	cfg, err := loadConfigFile(filepath.Clean(*configPath))
+	store, err := loadConfigStore(filepath.Clean(*configPath))
 	if err != nil {
 		return err
 	}
@@ -103,14 +103,14 @@ func runWorker(args []string) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	app := newWorkerApp(cfg)
+	app := newWorkerApp(filepath.Clean(*configPath), store)
 	return app.run(ctx)
 }
 
 func printUsage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  mock-upstream control [--port 18080] [--data-dir ./tmp/mock-upstream] [--admin-password admin]")
-	fmt.Fprintln(os.Stderr, "  mock-upstream worker --config ./tmp/mock-upstream/config.json")
+	fmt.Fprintln(os.Stderr, "  load-tester control [--port 18090] [--data-dir ./data] [--admin-password admin]")
+	fmt.Fprintln(os.Stderr, "  load-tester worker --config ./data/config.json")
 }
 
 func intEnv(key string, fallback int) int {

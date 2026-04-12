@@ -1,497 +1,283 @@
-const loginPanel = document.getElementById('login-panel');
-const loginForm = document.getElementById('login-form');
-const loginError = document.getElementById('login-error');
-const overviewCards = document.getElementById('overview-cards');
-const actionStatus = document.getElementById('action-status');
-const workerStatusBadge = document.getElementById('worker-status-badge');
-const sidebarHealth = document.getElementById('sidebar-health');
-const heroSummary = document.getElementById('hero-summary');
-const overviewRuntime = document.getElementById('overview-runtime');
-const overviewStatusCodes = document.getElementById('overview-status-codes');
-const tabTitle = document.getElementById('tab-title');
-const tabSubtitle = document.getElementById('tab-subtitle');
-const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
-const tabPanels = Array.from(document.querySelectorAll('.tab-panel'));
+const { createApp, ref, computed, onMounted, onUnmounted } = Vue;
+const { ElMessage } = ElementPlus;
 
-const tabMeta = {
-  overview: {
-    title: '总览',
-    subtitle: '查看 worker 状态、吞吐和主要运行指标。',
-  },
-  service: {
-    title: '服务控制',
-    subtitle: '管理 worker 生命周期、端口和鉴权相关开关。',
-  },
-  random: {
-    title: '全局随机',
-    subtitle: '调整随机模式、全局错误率、延迟和默认 token 范围。',
-  },
-  conversation: {
-    title: '对话与响应',
-    subtitle: '分别控制 Chat 和 Responses 的流式、tool call 与 MCP 风格参数。',
-  },
-  media: {
-    title: '图片与视频',
-    subtitle: '控制图片生成尺寸、视频任务推进、失败概率和媒体载荷范围。',
-  },
-  data: {
-    title: '数据查看',
-    subtitle: '查看路由统计、最近错误、最近请求和视频任务事件。',
-  },
-};
-
-let pollTimer = null;
-
-function zhStatus(status) {
-  const mapping = {
-    running: '运行中',
-    stopped: '已停止',
-    starting: '启动中',
-    unknown: '未知',
-  };
-  return mapping[status] || status || '未知';
-}
-
-async function api(path, options = {}) {
-  const response = await fetch(path, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
-  });
-
-  if (response.status === 401) {
-    showLogin();
-    throw new Error('未授权，请重新登录');
-  }
-
-  let payload = null;
-  const text = await response.text();
-  if (text) {
-    payload = JSON.parse(text);
-  }
-  if (!response.ok) {
-    throw new Error(payload?.message || `HTTP ${response.status}`);
-  }
-  return payload;
-}
-
-function showLogin() {
-  loginPanel.classList.add('visible');
-}
-
-function hideLogin() {
-  loginPanel.classList.remove('visible');
-  loginError.textContent = '';
-}
-
-function setStatus(message, isError = false) {
-  actionStatus.textContent = message || '';
-  actionStatus.className = isError ? 'error status-text' : 'muted status-text';
-}
-
-function setBadge(status) {
-  workerStatusBadge.textContent = zhStatus(status);
-  workerStatusBadge.className = `badge ${status === 'running' ? 'running' : 'stopped'}`;
-}
-
-function activateTab(tab) {
-  tabButtons.forEach((button) => {
-    button.classList.toggle('active', button.dataset.tab === tab);
-  });
-  tabPanels.forEach((panel) => {
-    panel.classList.toggle('active', panel.dataset.tabPanel === tab);
-  });
-  const meta = tabMeta[tab] || tabMeta.overview;
-  tabTitle.textContent = meta.title;
-  tabSubtitle.textContent = meta.subtitle;
-  window.localStorage.setItem('mock-upstream-active-tab', tab);
-}
-
-function joinLines(values = []) {
-  return values.join('\n');
-}
-
-function splitLines(value) {
-  return value
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function value(id) {
-  return document.getElementById(id).value;
-}
-
-function checked(id) {
-  return document.getElementById(id).checked;
-}
-
-function numberValue(id) {
-  return Number(document.getElementById(id).value || 0);
-}
-
-function fillConfig(config) {
-  document.getElementById('worker-port').value = config.worker.port;
-  document.getElementById('worker-pprof-port').value = config.worker.pprof_port;
-  document.getElementById('worker-require-auth').checked = config.worker.require_auth;
-  document.getElementById('worker-enable-pprof').checked = config.worker.enable_pprof;
-  document.getElementById('worker-models').value = joinLines(config.worker.models);
-
-  document.getElementById('random-mode').value = config.random.mode;
-  document.getElementById('random-seed').value = config.random.seed;
-  document.getElementById('latency-min').value = config.random.latency_ms.min;
-  document.getElementById('latency-max').value = config.random.latency_ms.max;
-  document.getElementById('error-rate').value = config.random.error_rate;
-  document.getElementById('rate-429').value = config.random.too_many_requests_rate;
-  document.getElementById('rate-500').value = config.random.server_error_rate;
-  document.getElementById('rate-timeout').value = config.random.timeout_rate;
-  document.getElementById('tokens-min').value = config.random.default_token_length.min;
-  document.getElementById('tokens-max').value = config.random.default_token_length.max;
-  document.getElementById('chunks-min').value = config.random.default_stream_chunks.min;
-  document.getElementById('chunks-max').value = config.random.default_stream_chunks.max;
-
-  fillTextConfig('chat', config.chat);
-  fillTextConfig('resp', config.responses);
-
-  document.getElementById('image-sizes').value = joinLines(config.images.sizes);
-  document.getElementById('image-watermarks').value = joinLines(config.images.watermark_texts);
-  document.getElementById('image-palette').value = joinLines(config.images.background_palette);
-  document.getElementById('image-url-rate').value = config.images.response_url_rate;
-  document.getElementById('image-watermark-rate').value = config.images.watermark_rate;
-  document.getElementById('image-count-min').value = config.images.image_count.min;
-  document.getElementById('image-count-max').value = config.images.image_count.max;
-  document.getElementById('image-bytes-min').value = config.images.image_bytes.min;
-  document.getElementById('image-bytes-max').value = config.images.image_bytes.max;
-
-  document.getElementById('video-duration-min').value = config.videos.durations_seconds.min;
-  document.getElementById('video-duration-max').value = config.videos.durations_seconds.max;
-  document.getElementById('video-resolutions').value = joinLines(config.videos.resolutions);
-  document.getElementById('video-failure-rate').value = config.videos.failure_rate;
-  document.getElementById('video-fps-min').value = config.videos.fps.min;
-  document.getElementById('video-fps-max').value = config.videos.fps.max;
-  document.getElementById('video-poll-min').value = config.videos.poll_interval_ms.min;
-  document.getElementById('video-poll-max').value = config.videos.poll_interval_ms.max;
-  document.getElementById('video-bytes-min').value = config.videos.video_bytes.min;
-  document.getElementById('video-bytes-max').value = config.videos.video_bytes.max;
-  document.getElementById('video-jitter-min').value = config.videos.progress_jitter.min;
-  document.getElementById('video-jitter-max').value = config.videos.progress_jitter.max;
-}
-
-function fillTextConfig(prefix, config) {
-  document.getElementById(`${prefix}-text-min`).value = config.text_tokens.min;
-  document.getElementById(`${prefix}-text-max`).value = config.text_tokens.max;
-  document.getElementById(`${prefix}-allow-stream`).checked = config.allow_stream;
-  document.getElementById(`${prefix}-usage`).value = config.usage_probability;
-  document.getElementById(`${prefix}-tool-prob`).value = config.tool_call_probability;
-  document.getElementById(`${prefix}-mcp-prob`).value = config.mcp_tool_probability;
-  document.getElementById(`${prefix}-tool-min`).value = config.tool_call_count.min;
-  document.getElementById(`${prefix}-tool-max`).value = config.tool_call_count.max;
-  document.getElementById(`${prefix}-args-min`).value = config.tool_arguments_bytes.min;
-  document.getElementById(`${prefix}-args-max`).value = config.tool_arguments_bytes.max;
-  document.getElementById(`${prefix}-final-prob`).value = config.final_answer_probability;
-  document.getElementById(`${prefix}-fp-prob`).value = config.system_fingerprint_probability;
-}
-
-function gatherTextConfig(prefix) {
-  return {
-    text_tokens: { min: numberValue(`${prefix}-text-min`), max: numberValue(`${prefix}-text-max`) },
-    allow_stream: checked(`${prefix}-allow-stream`),
-    usage_probability: Number(value(`${prefix}-usage`)),
-    tool_call_probability: Number(value(`${prefix}-tool-prob`)),
-    tool_call_count: { min: numberValue(`${prefix}-tool-min`), max: numberValue(`${prefix}-tool-max`) },
-    tool_arguments_bytes: { min: numberValue(`${prefix}-args-min`), max: numberValue(`${prefix}-args-max`) },
-    mcp_tool_probability: Number(value(`${prefix}-mcp-prob`)),
-    final_answer_probability: Number(value(`${prefix}-final-prob`)),
-    system_fingerprint_probability: Number(value(`${prefix}-fp-prob`)),
-  };
-}
-
-function gatherConfig() {
-  return {
-    worker: {
-      port: numberValue('worker-port'),
-      pprof_port: numberValue('worker-pprof-port'),
-      require_auth: checked('worker-require-auth'),
-      enable_pprof: checked('worker-enable-pprof'),
-      models: splitLines(value('worker-models')),
-    },
-    random: {
-      mode: value('random-mode'),
-      seed: numberValue('random-seed'),
-      latency_ms: { min: numberValue('latency-min'), max: numberValue('latency-max') },
-      error_rate: Number(value('error-rate')),
-      too_many_requests_rate: Number(value('rate-429')),
-      server_error_rate: Number(value('rate-500')),
-      timeout_rate: Number(value('rate-timeout')),
-      default_token_length: { min: numberValue('tokens-min'), max: numberValue('tokens-max') },
-      default_stream_chunks: { min: numberValue('chunks-min'), max: numberValue('chunks-max') },
-    },
-    chat: gatherTextConfig('chat'),
-    responses: gatherTextConfig('resp'),
-    images: {
-      sizes: splitLines(value('image-sizes')),
-      watermark_texts: splitLines(value('image-watermarks')),
-      background_palette: splitLines(value('image-palette')),
-      response_url_rate: Number(value('image-url-rate')),
-      watermark_rate: Number(value('image-watermark-rate')),
-      image_count: { min: numberValue('image-count-min'), max: numberValue('image-count-max') },
-      image_bytes: { min: numberValue('image-bytes-min'), max: numberValue('image-bytes-max') },
-    },
-    videos: {
-      durations_seconds: { min: Number(value('video-duration-min')), max: Number(value('video-duration-max')) },
-      resolutions: splitLines(value('video-resolutions')),
-      failure_rate: Number(value('video-failure-rate')),
-      fps: { min: numberValue('video-fps-min'), max: numberValue('video-fps-max') },
-      poll_interval_ms: { min: numberValue('video-poll-min'), max: numberValue('video-poll-max') },
-      video_bytes: { min: numberValue('video-bytes-min'), max: numberValue('video-bytes-max') },
-      progress_jitter: { min: numberValue('video-jitter-min'), max: numberValue('video-jitter-max') },
-    },
-  };
-}
-
-function renderOverview(runtime, summary) {
-  setBadge(runtime.worker.status);
-
-  const cards = [
-    ['总请求数', summary?.total_requests ?? 0],
-    ['QPS (1分钟)', Number(summary?.current_qps ?? 0).toFixed(2)],
-    ['错误率', `${((summary?.error_rate ?? 0) * 100).toFixed(2)}%`],
-    ['活跃请求', summary?.active_requests ?? 0],
-    ['活跃 SSE', summary?.active_sse ?? 0],
-    ['视频任务数', summary?.video_tasks ?? 0],
-  ];
-
-  overviewCards.innerHTML = cards
-    .map(
-      ([label, val]) => `
-        <div class="card">
-          <div class="card-label">${label}</div>
-          <div class="card-value">${val}</div>
-        </div>`,
-    )
-    .join('');
-
-  sidebarHealth.innerHTML = [
-    ['控制台端口', runtime.control_port],
-    ['Worker 端口', runtime.config.worker.port],
-    ['Worker PID', runtime.worker.pid || '-'],
-    ['运行时长', `${runtime.worker.uptime_sec || 0}s`],
-  ]
-    .map(
-      ([label, val]) => `
-        <div class="mini-stat">
-          <span>${label}</span>
-          <strong>${val}</strong>
-        </div>`,
-    )
-    .join('');
-
-  heroSummary.innerHTML = [
-    ['状态', zhStatus(runtime.worker.status)],
-    ['QPS', Number(summary?.current_qps ?? 0).toFixed(2)],
-    ['错误率', `${((summary?.error_rate ?? 0) * 100).toFixed(2)}%`],
-  ]
-    .map(
-      ([label, val]) => `
-        <div class="hero-pill">
-          <span>${label}</span>
-          <strong>${val}</strong>
-        </div>`,
-    )
-    .join('');
-
-  const runtimeItems = [
-    ['Worker 地址', runtime.worker.public_base || '-'],
-    ['PProf 地址', runtime.worker.pprof_url || '未启用'],
-    ['鉴权要求', runtime.config.worker.require_auth ? '已启用' : '未启用'],
-    ['随机模式', runtime.config.random.mode],
-    ['模型数量', runtime.config.worker.models.length],
-    ['数据目录', runtime.data_dir],
-  ];
-  overviewRuntime.innerHTML = runtimeItems
-    .map(
-      ([label, val]) => `
-        <div class="detail-item">
-          <span>${label}</span>
-          <strong>${val}</strong>
-        </div>`,
-    )
-    .join('');
-
-  const codes = Object.entries(summary?.status_codes || {}).sort(([a], [b]) => Number(a) - Number(b));
-  overviewStatusCodes.innerHTML =
-    codes.length === 0
-      ? '<span class="chip empty">暂无状态码数据</span>'
-      : codes.map(([code, count]) => `<span class="chip">${code} · ${count}</span>`).join('');
-}
-
-function renderRoutes(routes) {
-  const tbody = document.querySelector('#routes-table tbody');
-  if (!routes.items.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">暂无路由统计</td></tr>';
-    return;
-  }
-  tbody.innerHTML = routes.items
-    .map(
-      (item) => `
-        <tr>
-          <td>${item.route}</td>
-          <td>${item.requests}</td>
-          <td>${item.successes}</td>
-          <td>${item.errors}</td>
-          <td>${item.active}</td>
-          <td>${item.average_ms.toFixed(2)}</td>
-          <td>${item.p50_ms.toFixed(2)}</td>
-          <td>${item.p95_ms.toFixed(2)}</td>
-          <td>${item.last_status || '-'}</td>
-        </tr>`,
-    )
-    .join('');
-}
-
-function renderSimpleTable(selector, rows, formatter, emptyText) {
-  const tbody = document.querySelector(`${selector} tbody`);
-  if (!rows.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td class="empty-cell">${emptyText}</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = rows
-    .map((row) => `<tr><td>${formatter(row)}</td></tr>`)
-    .join('');
-}
-
-function formatTime(value) {
-  if (!value) return '-';
-  return new Date(value).toLocaleTimeString();
-}
-
-async function loadRuntime() {
-  const [runtime, config] = await Promise.all([api('/api/runtime'), api('/api/config')]);
-  fillConfig(config);
-  const runtimeView = { ...runtime, config };
-
-  let summary = {
-    total_requests: 0,
-    current_qps: 0,
-    error_rate: 0,
-    active_requests: 0,
-    active_sse: 0,
-    video_tasks: 0,
-    status_codes: {},
-  };
-  let routes = { items: [] };
-  let events = { errors: [], requests: [], videos: [] };
-
-  if (runtime.worker.status === 'running') {
-    [summary, routes, events] = await Promise.all([
-      api('/api/stats/summary'),
-      api('/api/stats/routes'),
-      api('/api/stats/events'),
-    ]);
-  }
-
-  renderOverview(runtimeView, summary);
-  renderRoutes(routes);
-  renderSimpleTable(
-    '#errors-table',
-    events.errors.slice(0, 10),
-    (row) => `${formatTime(row.timestamp)} | ${row.route} | ${row.status_code} | ${row.error || '-'}`,
-    '暂无错误事件',
-  );
-  renderSimpleTable(
-    '#requests-table',
-    events.requests.slice(0, 10),
-    (row) => `${formatTime(row.timestamp)} | ${row.method} ${row.route} | ${row.status_code} | ${row.latency_ms}ms`,
-    '暂无请求事件',
-  );
-  renderSimpleTable(
-    '#videos-table',
-    events.videos.slice(0, 10),
-    (row) => `${formatTime(row.timestamp)} | ${row.task_id} | ${row.status} | ${row.resolution} @ ${row.fps}fps`,
-    '暂无视频任务',
-  );
-}
-
-async function saveConfig() {
-  const payload = gatherConfig();
-  await api('/api/config', {
-    method: 'PUT',
-    body: JSON.stringify(payload),
-  });
-  setStatus('配置已保存');
-  await loadRuntime();
-}
-
-async function workerAction(path, message) {
-  await api(path, { method: 'POST', body: '{}' });
-  setStatus(message);
-  await loadRuntime();
-}
-
-function startPolling() {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(() => {
-    loadRuntime().catch((error) => setStatus(error.message, true));
-  }, 2000);
-}
-
-loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  loginError.textContent = '';
-  try {
-    await api('/api/admin/login', {
-      method: 'POST',
-      body: JSON.stringify({ password: document.getElementById('login-password').value }),
+createApp({
+  setup() {
+    const activeTab = ref('overview');
+    const actionStatus = ref('');
+    const runtime = ref(null);
+    const summary = ref(null);
+    const config = ref({
+      worker: { port: 18081, pprof_port: 18085, require_auth: false, enable_pprof: false, management_token: '', models: [] },
+      random: { mode: 'true_random', seed: 20260411, latency_ms: { min: 20, max: 150 }, error_rate: 0.02, too_many_requests_rate: 0.01, server_error_rate: 0.01, timeout_rate: 0.005, default_token_length: { min: 48, max: 256 }, default_stream_chunks: { min: 2, max: 8 } },
+      chat: { text_tokens: { min: 48, max: 256 }, allow_stream: true, usage_probability: 0.95, tool_call_probability: 0.35, tool_call_count: { min: 1, max: 3 }, tool_arguments_bytes: { min: 64, max: 384 }, mcp_tool_probability: 0.15, final_answer_probability: 0.85, system_fingerprint_chance: 0.75 },
+      responses: { text_tokens: { min: 48, max: 256 }, allow_stream: true, usage_probability: 0.95, tool_call_probability: 0.40, tool_call_count: { min: 1, max: 3 }, tool_arguments_bytes: { min: 64, max: 512 }, mcp_tool_probability: 0.20, final_answer_probability: 0.80, system_fingerprint_chance: 0.60 },
+      images: { sizes: [], response_url_rate: 0.70, image_count: { min: 1, max: 4 }, image_bytes: { min: 12000, max: 120000 }, watermark_texts: [], watermark_rate: 0.85, background_palette: [] },
+      videos: { durations_seconds: { min: 3, max: 12 }, resolutions: [], fps: { min: 12, max: 30 }, poll_interval_ms: { min: 400, max: 2200 }, failure_rate: 0.15, video_bytes: { min: 90000, max: 350000 }, progress_jitter: { min: 1, max: 12 } }
     });
-    hideLogin();
-    await loadRuntime();
-    startPolling();
-  } catch (error) {
-    loginError.textContent = error.message;
+    
+    const modelsText = ref('');
+    const imageSizesText = ref('');
+    const imageWatermarksText = ref('');
+    const imagePaletteText = ref('');
+    const videoResolutionsText = ref('');
+    
+    const routesTableData = ref([]);
+    const errorsTableData = ref([]);
+    const requestsTableData = ref([]);
+    const videosTableData = ref([]);
+    
+    let pollTimer = null;
+
+    const tabs = [
+      { key: 'overview', label: '总览', title: '总览', subtitle: '查看 worker 状态、吞吐和主要运行指标' },
+      { key: 'service', label: '服务控制', title: '服务控制', subtitle: '管理 worker 生命周期、端口和鉴权设置' },
+      { key: 'random', label: '全局随机', title: '全局随机', subtitle: '调整随机模式、延迟、错误率和 Token 范围' },
+      { key: 'conversation', label: '对话配置', title: '对话配置', subtitle: '配置 Chat 和 Responses 的流式、Tool 调用参数' },
+      { key: 'media', label: '媒体配置', title: '媒体配置', subtitle: '配置图片生成和视频任务参数' },
+      { key: 'data', label: '数据统计', title: '数据统计', subtitle: '查看路由统计、最近错误、请求和视频任务' }
+    ];
+
+    const currentTab = computed(() => {
+      const tab = tabs.find(t => t.key === activeTab.value);
+      return tab || { title: '总览', subtitle: '' };
+    });
+
+    const workerStatusText = computed(() => {
+      const status = runtime.value?.worker?.status;
+      const mapping = { running: '运行中', stopped: '已停止', starting: '启动中', unknown: '未知' };
+      return mapping[status] || '未知';
+    });
+
+    const workerStatusType = computed(() => {
+      const status = runtime.value?.worker?.status;
+      const mapping = { running: 'success', stopped: 'danger', starting: 'warning', unknown: 'info' };
+      return mapping[status] || 'info';
+    });
+
+    const sortedStatusCodes = computed(() => {
+      const codes = summary.value?.status_codes || {};
+      return Object.entries(codes).sort(([a], [b]) => Number(a) - Number(b));
+    });
+
+    async function fetchAPI(endpoint, options = {}) {
+      const response = await fetch(endpoint, options);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }
+
+    async function loadConfig() {
+      try {
+        const data = await fetchAPI('/api/config');
+        config.value = data;
+        modelsText.value = data.worker.models.join('\n');
+        imageSizesText.value = data.images.sizes.join('\n');
+        imageWatermarksText.value = data.images.watermark_texts.join('\n');
+        imagePaletteText.value = data.images.background_palette.join('\n');
+        videoResolutionsText.value = data.videos.resolutions.join('\n');
+      } catch (e) {
+        console.error('Failed to load config:', e);
+      }
+    }
+
+    async function loadRuntime() {
+      try {
+        runtime.value = await fetchAPI('/api/runtime');
+      } catch (e) {
+        console.error('Failed to load runtime:', e);
+      }
+    }
+
+    async function loadSummary() {
+      try {
+        summary.value = await fetchAPI('/api/summary');
+      } catch (e) {
+        console.error('Failed to load summary:', e);
+      }
+    }
+
+    async function loadRoutes() {
+      try {
+        const data = await fetchAPI('/api/routes');
+        routesTableData.value = data.items.map(item => ({
+          route: item.route,
+          requests: item.requests,
+          success: item.success,
+          errors: item.errors,
+          active: item.active,
+          avg_ms: item.avg_ms,
+          p50: item.p50,
+          p95: item.p95,
+          last_status: item.last_status
+        }));
+      } catch (e) {
+        console.error('Failed to load routes:', e);
+      }
+    }
+
+    async function loadErrors() {
+      try {
+        const data = await fetchAPI('/api/errors');
+        errorsTableData.value = data.items.map(item => ({
+          time: new Date(item.timestamp).toLocaleString(),
+          route: item.route,
+          error: item.error
+        }));
+      } catch (e) {
+        console.error('Failed to load errors:', e);
+      }
+    }
+
+    async function loadRequests() {
+      try {
+        const data = await fetchAPI('/api/requests');
+        requestsTableData.value = data.items.map(item => ({
+          time: new Date(item.timestamp).toLocaleString(),
+          route: item.route,
+          model: item.model
+        }));
+      } catch (e) {
+        console.error('Failed to load requests:', e);
+      }
+    }
+
+    async function loadVideos() {
+      try {
+        const data = await fetchAPI('/api/videos');
+        videosTableData.value = data.items.map(item => ({
+          time: new Date(item.created_at).toLocaleString(),
+          id: item.id,
+          status: item.status
+        }));
+      } catch (e) {
+        console.error('Failed to load videos:', e);
+      }
+    }
+
+    async function refreshAll() {
+      actionStatus.value = '刷新中...';
+      await Promise.all([loadConfig(), loadRuntime(), loadSummary()]);
+      if (activeTab.value === 'data') {
+        await Promise.all([loadRoutes(), loadErrors(), loadRequests(), loadVideos()]);
+      }
+      actionStatus.value = '';
+    }
+
+    async function workerAction(endpoint, message) {
+      try {
+        actionStatus.value = '处理中...';
+        await fetchAPI(endpoint, { method: 'POST' });
+        ElMessage.success(message);
+        await loadRuntime();
+      } catch (e) {
+        ElMessage.error('操作失败: ' + e.message);
+      } finally {
+        actionStatus.value = '';
+      }
+    }
+
+    async function saveConfig() {
+      try {
+        actionStatus.value = '保存中...';
+        const payload = {
+          worker: {
+            port: config.value.worker.port,
+            require_auth: config.value.worker.require_auth,
+            management_token: config.value.worker.management_token,
+            enable_pprof: config.value.worker.enable_pprof,
+            pprof_port: config.value.worker.pprof_port,
+            models: modelsText.value.split('\n').map(s => s.trim()).filter(s => s)
+          },
+          random: config.value.random,
+          chat: config.value.chat,
+          responses: config.value.responses,
+          images: {
+            ...config.value.images,
+            sizes: imageSizesText.value.split('\n').map(s => s.trim()).filter(s => s),
+            watermark_texts: imageWatermarksText.value.split('\n').map(s => s.trim()).filter(s => s),
+            background_palette: imagePaletteText.value.split('\n').map(s => s.trim()).filter(s => s)
+          },
+          videos: {
+            ...config.value.videos,
+            resolutions: videoResolutionsText.value.split('\n').map(s => s.trim()).filter(s => s)
+          }
+        };
+        await fetchAPI('/api/config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        ElMessage.success('配置已保存');
+      } catch (e) {
+        ElMessage.error('保存失败: ' + e.message);
+      } finally {
+        actionStatus.value = '';
+      }
+    }
+
+    async function resetStats() {
+      try {
+        actionStatus.value = '重置中...';
+        await fetchAPI('/api/stats/reset', { method: 'POST' });
+        ElMessage.success('统计已重置');
+        await loadRoutes();
+      } catch (e) {
+        ElMessage.error('重置失败: ' + e.message);
+      } finally {
+        actionStatus.value = '';
+      }
+    }
+
+    function startPolling() {
+      pollTimer = setInterval(() => {
+        loadRuntime();
+        loadSummary();
+        if (activeTab.value === 'data') {
+          loadRoutes();
+        }
+      }, 2000);
+    }
+
+    function stopPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    onMounted(() => {
+      refreshAll();
+      startPolling();
+    });
+
+    onUnmounted(() => {
+      stopPolling();
+    });
+
+    return {
+      activeTab,
+      actionStatus,
+      runtime,
+      summary,
+      config,
+      modelsText,
+      imageSizesText,
+      imageWatermarksText,
+      imagePaletteText,
+      videoResolutionsText,
+      routesTableData,
+      errorsTableData,
+      requestsTableData,
+      videosTableData,
+      tabs,
+      currentTab,
+      workerStatusText,
+      workerStatusType,
+      sortedStatusCodes,
+      refreshAll,
+      workerAction,
+      saveConfig,
+      resetStats
+    };
   }
-});
-
-tabButtons.forEach((button) => {
-  button.addEventListener('click', () => activateTab(button.dataset.tab));
-});
-
-document
-  .getElementById('save-config')
-  .addEventListener('click', () => saveConfig().catch((error) => setStatus(error.message, true)));
-document
-  .getElementById('refresh-all')
-  .addEventListener('click', () => loadRuntime().catch((error) => setStatus(error.message, true)));
-document
-  .getElementById('worker-start')
-  .addEventListener('click', () => workerAction('/api/worker/start', 'Worker 已启动').catch((error) => setStatus(error.message, true)));
-document
-  .getElementById('worker-stop')
-  .addEventListener('click', () => workerAction('/api/worker/stop', 'Worker 已停止').catch((error) => setStatus(error.message, true)));
-document
-  .getElementById('worker-restart')
-  .addEventListener('click', () => workerAction('/api/worker/restart', 'Worker 已重启').catch((error) => setStatus(error.message, true)));
-document.getElementById('reset-stats').addEventListener('click', async () => {
-  try {
-    await api('/api/stats/reset', { method: 'POST', body: '{}' });
-    setStatus('统计已重置');
-    await loadRuntime();
-  } catch (error) {
-    setStatus(error.message, true);
-  }
-});
-
-document.getElementById('logout').addEventListener('click', async () => {
-  try {
-    await api('/api/admin/logout', { method: 'POST', body: '{}' });
-  } catch (_) {
-    // ignore
-  }
-  showLogin();
-});
-
-const initialTab = window.localStorage.getItem('mock-upstream-active-tab') || 'overview';
-activateTab(initialTab);
-showLogin();
+}).use(ElementPlus).mount('#app');

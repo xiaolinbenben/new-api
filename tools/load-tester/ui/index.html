@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Load Tester 控制台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body class="bg-slate-950 text-slate-100">
+    <div id="app" class="min-h-screen">
+      <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 class="text-3xl font-semibold tracking-tight text-white">Load Tester</h1>
+            <p class="mt-1 text-sm text-slate-400">独立压测控制台，支持多场景并发、SSE 和任务轮询。</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <el-tag :type="runtime.worker?.run_status === 'running' ? 'success' : 'info'" effect="dark">
+              [[ runtime.worker?.run_status || 'idle' ]]
+            </el-tag>
+            <el-button @click="refreshAll" :loading="loading">刷新</el-button>
+            <el-button type="danger" plain @click="logout">退出</el-button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div class="panel-card">
+            <div class="panel-label">Run Status</div>
+            <div class="panel-value">[[ summary.run_status || 'idle' ]]</div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-label">Total Requests</div>
+            <div class="panel-value">[[ summary.total_requests || 0 ]]</div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-label">Success Rate</div>
+            <div class="panel-value">[[ successRate ]]</div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-label">Current TPS</div>
+            <div class="panel-value">[[ formatFloat(summary.current_tps) ]]</div>
+          </div>
+          <div class="panel-card">
+            <div class="panel-label">P95</div>
+            <div class="panel-value">[[ formatDuration(summary.p95_ms) ]]</div>
+          </div>
+        </div>
+
+        <el-tabs v-model="activeTab" class="mt-6">
+          <el-tab-pane label="Overview" name="overview">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <div class="xl:col-span-2">
+                <div class="panel-shell">
+                  <div class="panel-title">全局指标</div>
+                  <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="metric-box">
+                      <div class="metric-label">Successes</div>
+                      <div class="metric-value text-emerald-300">[[ summary.successes || 0 ]]</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">Errors</div>
+                      <div class="metric-value text-rose-300">[[ summary.errors || 0 ]]</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">Timeouts</div>
+                      <div class="metric-value text-amber-300">[[ summary.timeouts || 0 ]]</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">Average</div>
+                      <div class="metric-value">[[ formatDuration(summary.average_ms) ]]</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">P50</div>
+                      <div class="metric-value">[[ formatDuration(summary.p50_ms) ]]</div>
+                    </div>
+                    <div class="metric-box">
+                      <div class="metric-label">P99</div>
+                      <div class="metric-value">[[ formatDuration(summary.p99_ms) ]]</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-shell">
+                <div class="panel-title">状态码分布</div>
+                <div class="space-y-2">
+                  <div v-if="!statusCodeEntries.length" class="text-sm text-slate-400">暂无数据</div>
+                  <div v-for="entry in statusCodeEntries" :key="entry.code" class="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2">
+                    <span class="font-mono text-sm text-slate-300">[[ entry.code ]]</span>
+                    <span class="text-sm text-slate-100">[[ entry.count ]]</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-shell mt-4">
+              <div class="panel-title">场景实时统计</div>
+              <el-table :data="scenarioStats.items" stripe>
+                <el-table-column prop="name" label="场景" min-width="180" />
+                <el-table-column prop="mode" label="模式" width="120" />
+                <el-table-column prop="weight" label="权重" width="80" />
+                <el-table-column prop="requests" label="请求数" width="100" />
+                <el-table-column prop="successes" label="成功" width="90" />
+                <el-table-column prop="errors" label="失败" width="90" />
+                <el-table-column prop="timeouts" label="超时" width="90" />
+                <el-table-column label="TPS" width="100">
+                  <template #default="scope">[[ formatFloat(scope.row.current_tps) ]]</template>
+                </el-table-column>
+                <el-table-column label="P95" width="100">
+                  <template #default="scope">[[ formatDuration(scope.row.p95_ms) ]]</template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="Scenarios" name="scenarios">
+            <div class="panel-shell">
+              <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="panel-title">场景配置</div>
+                <div class="flex gap-2">
+                  <el-button @click="addScenario">新增场景</el-button>
+                  <el-button type="primary" @click="saveConfig" :loading="savingConfig">保存配置</el-button>
+                </div>
+              </div>
+
+              <el-form label-position="top" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <el-form-item label="Target Base URL">
+                  <el-input v-model="config.target.base_url" placeholder="http://127.0.0.1:3000" />
+                </el-form-item>
+                <el-form-item label="Target Headers (JSON)">
+                  <el-input v-model="targetHeadersText" type="textarea" :rows="5" />
+                </el-form-item>
+                <el-form-item label="Max Request Samples">
+                  <el-input-number v-model="config.sampling.max_request_samples" :min="1" :max="1000" />
+                </el-form-item>
+                <el-form-item label="Max Error Samples">
+                  <el-input-number v-model="config.sampling.max_error_samples" :min="1" :max="1000" />
+                </el-form-item>
+                <el-form-item label="Max Body Bytes">
+                  <el-input-number v-model="config.sampling.max_body_bytes" :min="256" :step="256" />
+                </el-form-item>
+                <el-form-item label="Masked Headers (comma separated)">
+                  <el-input v-model="maskHeadersText" />
+                </el-form-item>
+              </el-form>
+
+              <el-table :data="config.scenarios" stripe class="mt-4">
+                <el-table-column label="启用" width="80">
+                  <template #default="scope">
+                    <el-switch v-model="scope.row.enabled" />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="name" label="名称" min-width="180" />
+                <el-table-column prop="id" label="ID" min-width="160" />
+                <el-table-column prop="preset" label="预设" min-width="160" />
+                <el-table-column prop="mode" label="模式" width="110" />
+                <el-table-column prop="weight" label="权重" width="90" />
+                <el-table-column label="操作" width="180">
+                  <template #default="scope">
+                    <div class="flex gap-2">
+                      <el-button size="small" @click="editScenario(scope.$index)">编辑</el-button>
+                      <el-button size="small" type="danger" plain @click="removeScenario(scope.$index)">删除</el-button>
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="Run" name="run">
+            <div class="panel-shell">
+              <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="panel-title">运行控制</div>
+                <div class="flex gap-2">
+                  <el-button type="primary" @click="startRun" :disabled="runtime.worker?.run_status === 'running'" :loading="runActionLoading">开始压测</el-button>
+                  <el-button type="danger" plain @click="stopRun" :disabled="runtime.worker?.run_status !== 'running'" :loading="runActionLoading">停止压测</el-button>
+                </div>
+              </div>
+
+              <el-form label-position="top" class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <el-form-item label="总并发">
+                  <el-input-number v-model="config.run.total_concurrency" :min="1" :max="100000" />
+                </el-form-item>
+                <el-form-item label="升压秒数">
+                  <el-input-number v-model="config.run.ramp_up_sec" :min="0" :max="3600" />
+                </el-form-item>
+                <el-form-item label="运行时长(秒)">
+                  <el-input-number v-model="config.run.duration_sec" :min="1" :max="86400" />
+                </el-form-item>
+                <el-form-item label="逻辑请求上限(0=不限)">
+                  <el-input-number v-model="config.run.max_requests" :min="0" :max="10000000" />
+                </el-form-item>
+                <el-form-item label="单请求超时(ms)">
+                  <el-input-number v-model="config.run.request_timeout_ms" :min="100" :step="100" />
+                </el-form-item>
+                <el-form-item label="TLS Skip Verify">
+                  <el-switch v-model="config.target.insecure_skip_verify" />
+                </el-form-item>
+              </el-form>
+
+              <div class="mt-4 rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                <div class="text-sm text-slate-300">当前 run id</div>
+                <div class="mt-1 font-mono text-sm text-slate-100">[[ summary.run_id || '-' ]]</div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="Samples" name="samples">
+            <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div class="panel-shell">
+                <div class="mb-3 flex items-center justify-between">
+                  <div class="panel-title">最近请求样本</div>
+                  <el-select v-model="sampleFilter" clearable placeholder="按场景过滤" style="width: 220px;">
+                    <el-option v-for="item in config.scenarios" :key="item.id" :label="item.name" :value="item.id" />
+                  </el-select>
+                </div>
+                <el-table :data="filteredRequestSamples" height="420" @row-click="openSample">
+                  <el-table-column prop="scenario_name" label="场景" min-width="150" />
+                  <el-table-column prop="stage" label="阶段" width="100" />
+                  <el-table-column label="结果" width="110">
+                    <template #default="scope">
+                      <el-tag :type="scope.row.success ? 'success' : 'danger'">[[ scope.row.success ? '成功' : '失败' ]]</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="状态" width="90">
+                    <template #default="scope">[[ scope.row.response.status_code || '-' ]]</template>
+                  </el-table-column>
+                  <el-table-column label="耗时" width="90">
+                    <template #default="scope">[[ scope.row.duration_ms ]]ms</template>
+                  </el-table-column>
+                  <el-table-column prop="error_kind" label="错误类型" min-width="140" />
+                </el-table>
+              </div>
+
+              <div class="panel-shell">
+                <div class="panel-title mb-3">错误样本</div>
+                <el-table :data="filteredErrorSamples" height="420" @row-click="openSample">
+                  <el-table-column prop="scenario_name" label="场景" min-width="150" />
+                  <el-table-column prop="stage" label="阶段" width="100" />
+                  <el-table-column label="状态" width="90">
+                    <template #default="scope">[[ scope.row.response.status_code || '-' ]]</template>
+                  </el-table-column>
+                  <el-table-column prop="error_kind" label="错误类型" min-width="140" />
+                  <el-table-column label="时间" min-width="160">
+                    <template #default="scope">[[ formatDateTime(scope.row.timestamp) ]]</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="History" name="history">
+            <div class="panel-shell">
+              <div class="mb-3 flex items-center justify-between">
+                <div class="panel-title">历史记录</div>
+                <el-button @click="loadHistory">刷新历史</el-button>
+              </div>
+              <el-table :data="history.items" @row-click="openHistory">
+                <el-table-column prop="run_id" label="Run ID" min-width="220" />
+                <el-table-column prop="run_status" label="状态" width="100" />
+                <el-table-column prop="total_requests" label="请求数" width="100" />
+                <el-table-column prop="successes" label="成功" width="90" />
+                <el-table-column prop="errors" label="失败" width="90" />
+                <el-table-column prop="timeouts" label="超时" width="90" />
+                <el-table-column label="P95" width="100">
+                  <template #default="scope">[[ formatDuration(scope.row.p95_ms) ]]</template>
+                </el-table-column>
+                <el-table-column label="开始时间" min-width="180">
+                  <template #default="scope">[[ formatDateTime(scope.row.started_at) ]]</template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+
+      <el-dialog v-model="loginVisible" title="管理员登录" width="420px" :close-on-click-modal="false" :show-close="false">
+        <el-form label-position="top">
+          <el-form-item label="Password">
+            <el-input v-model="loginPassword" type="password" show-password @keyup.enter="login" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button type="primary" @click="login" :loading="loginLoading">登录</el-button>
+        </template>
+      </el-dialog>
+
+      <el-drawer v-model="scenarioDrawerVisible" title="场景编辑" size="700px">
+        <el-form label-position="top" class="drawer-form">
+          <el-form-item label="ID"><el-input v-model="scenarioDraft.id" /></el-form-item>
+          <el-form-item label="Name"><el-input v-model="scenarioDraft.name" /></el-form-item>
+          <el-form-item label="Preset">
+            <el-select v-model="scenarioDraft.preset" placeholder="可选预设">
+              <el-option label="raw_http" value="raw_http" />
+              <el-option label="new_api_chat" value="new_api_chat" />
+              <el-option label="new_api_responses" value="new_api_responses" />
+              <el-option label="new_api_images" value="new_api_images" />
+              <el-option label="new_api_videos" value="new_api_videos" />
+            </el-select>
+          </el-form-item>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <el-form-item label="Mode">
+              <el-select v-model="scenarioDraft.mode">
+                <el-option label="single" value="single" />
+                <el-option label="sse" value="sse" />
+                <el-option label="task_flow" value="task_flow" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="Weight"><el-input-number v-model="scenarioDraft.weight" :min="1" /></el-form-item>
+            <el-form-item label="Enabled"><el-switch v-model="scenarioDraft.enabled" /></el-form-item>
+          </div>
+
+          <template v-if="scenarioDraft.mode !== 'task_flow'">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Method"><el-input v-model="scenarioDraft.method" /></el-form-item>
+              <el-form-item label="Path"><el-input v-model="scenarioDraft.path" /></el-form-item>
+            </div>
+            <el-form-item label="Headers (JSON)"><el-input v-model="scenarioDraft.headersText" type="textarea" :rows="4" /></el-form-item>
+            <el-form-item label="Expected Statuses (comma separated)"><el-input v-model="scenarioDraft.expectedStatusesText" /></el-form-item>
+            <el-form-item label="Body"><el-input v-model="scenarioDraft.body" type="textarea" :rows="8" /></el-form-item>
+          </template>
+
+          <template v-else>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Task ID Path"><el-input v-model="scenarioDraft.extractors.task_id_path" /></el-form-item>
+              <el-form-item label="Task Status Path"><el-input v-model="scenarioDraft.extractors.task_status_path" /></el-form-item>
+            </div>
+
+            <div class="section-title">Submit Request</div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Method"><el-input v-model="scenarioDraft.task_flow.submit_request.method" /></el-form-item>
+              <el-form-item label="Path"><el-input v-model="scenarioDraft.task_flow.submit_request.path" /></el-form-item>
+            </div>
+            <el-form-item label="Headers (JSON)"><el-input v-model="scenarioDraft.taskFlowSubmitHeadersText" type="textarea" :rows="3" /></el-form-item>
+            <el-form-item label="Expected Statuses"><el-input v-model="scenarioDraft.taskFlowSubmitStatusesText" /></el-form-item>
+            <el-form-item label="Body"><el-input v-model="scenarioDraft.task_flow.submit_request.body" type="textarea" :rows="6" /></el-form-item>
+
+            <div class="section-title">Poll Request</div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Method"><el-input v-model="scenarioDraft.task_flow.poll_request.method" /></el-form-item>
+              <el-form-item label="Path Template"><el-input v-model="scenarioDraft.task_flow.poll_request.path_template" /></el-form-item>
+            </div>
+            <el-form-item label="Headers (JSON)"><el-input v-model="scenarioDraft.taskFlowPollHeadersText" type="textarea" :rows="3" /></el-form-item>
+            <el-form-item label="Expected Statuses"><el-input v-model="scenarioDraft.taskFlowPollStatusesText" /></el-form-item>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Success Values"><el-input v-model="scenarioDraft.taskFlowSuccessText" /></el-form-item>
+              <el-form-item label="Failure Values"><el-input v-model="scenarioDraft.taskFlowFailureText" /></el-form-item>
+            </div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <el-form-item label="Poll Interval (ms)"><el-input-number v-model="scenarioDraft.task_flow.poll_interval_ms" :min="1" /></el-form-item>
+              <el-form-item label="Max Polls"><el-input-number v-model="scenarioDraft.task_flow.max_polls" :min="1" /></el-form-item>
+            </div>
+          </template>
+        </el-form>
+        <template #footer>
+          <div class="flex gap-2">
+            <el-button @click="scenarioDrawerVisible = false">取消</el-button>
+            <el-button type="primary" @click="commitScenarioDraft">保存场景</el-button>
+          </div>
+        </template>
+      </el-drawer>
+
+      <el-drawer v-model="sampleDrawerVisible" title="样本详情" size="760px">
+        <template v-if="selectedSample">
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div class="sample-meta"><span>场景</span><strong>[[ selectedSample.scenario_name ]]</strong></div>
+              <div class="sample-meta"><span>阶段</span><strong>[[ selectedSample.stage ]]</strong></div>
+              <div class="sample-meta"><span>结果</span><strong>[[ selectedSample.success ? '成功' : '失败' ]]</strong></div>
+              <div class="sample-meta"><span>错误类型</span><strong>[[ selectedSample.error_kind || '-' ]]</strong></div>
+            </div>
+            <div class="section-title">Request</div>
+            <pre class="sample-pre">[[ prettySample(selectedSample.request) ]]</pre>
+            <div class="section-title">Response</div>
+            <pre class="sample-pre">[[ prettySample(selectedSample.response) ]]</pre>
+          </div>
+        </template>
+      </el-drawer>
+
+      <el-drawer v-model="historyDrawerVisible" title="历史详情" size="760px">
+        <template v-if="selectedHistory">
+          <div class="space-y-4">
+            <div class="section-title">Summary</div>
+            <pre class="sample-pre">[[ prettySample(selectedHistory.summary) ]]</pre>
+            <div class="section-title">Scenarios</div>
+            <pre class="sample-pre">[[ prettySample(selectedHistory.scenarios) ]]</pre>
+          </div>
+        </template>
+      </el-drawer>
+    </div>
+
+    <script>
+      window.__ELEMENT_PLUS_I18N__ = {};
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://unpkg.com/element-plus/dist/index.full.min.js"></script>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

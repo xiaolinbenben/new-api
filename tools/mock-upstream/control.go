@@ -51,6 +51,11 @@ func (s *controlServer) run(ctx context.Context) error {
 		close(errCh)
 	}()
 
+	// Wait a moment for server to start
+	time.Sleep(100 * time.Millisecond)
+	fmt.Printf("\nMock Upstream 控制台已启动\n")
+	fmt.Printf("访问地址: http://localhost:%d\n\n", s.bootstrap.ControlPort)
+
 	select {
 	case <-ctx.Done():
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -65,17 +70,17 @@ func (s *controlServer) handler() *http.ServeMux {
 	mux := http.NewServeMux()
 	registerUIRoutes(mux)
 	mux.HandleFunc("POST /api/admin/login", s.handleLogin)
-	mux.HandleFunc("POST /api/admin/logout", s.withSession(s.handleLogout))
-	mux.HandleFunc("GET /api/config", s.withSession(s.handleGetConfig))
-	mux.HandleFunc("PUT /api/config", s.withSession(s.handlePutConfig))
-	mux.HandleFunc("GET /api/runtime", s.withSession(s.handleRuntime))
-	mux.HandleFunc("POST /api/worker/start", s.withSession(s.handleWorkerStart))
-	mux.HandleFunc("POST /api/worker/stop", s.withSession(s.handleWorkerStop))
-	mux.HandleFunc("POST /api/worker/restart", s.withSession(s.handleWorkerRestart))
-	mux.HandleFunc("GET /api/stats/summary", s.withSession(s.handleStatsSummary))
-	mux.HandleFunc("GET /api/stats/routes", s.withSession(s.handleStatsRoutes))
-	mux.HandleFunc("GET /api/stats/events", s.withSession(s.handleStatsEvents))
-	mux.HandleFunc("POST /api/stats/reset", s.withSession(s.handleStatsReset))
+	mux.HandleFunc("POST /api/admin/logout", s.handleLogout)
+	mux.HandleFunc("GET /api/config", s.handleGetConfig)
+	mux.HandleFunc("PUT /api/config", s.handlePutConfig)
+	mux.HandleFunc("GET /api/runtime", s.handleRuntime)
+	mux.HandleFunc("POST /api/worker/start", s.handleWorkerStart)
+	mux.HandleFunc("POST /api/worker/stop", s.handleWorkerStop)
+	mux.HandleFunc("POST /api/worker/restart", s.handleWorkerRestart)
+	mux.HandleFunc("GET /api/stats/summary", s.handleStatsSummary)
+	mux.HandleFunc("GET /api/stats/routes", s.handleStatsRoutes)
+	mux.HandleFunc("GET /api/stats/events", s.handleStatsEvents)
+	mux.HandleFunc("POST /api/stats/reset", s.handleStatsReset)
 	return mux
 }
 
@@ -128,11 +133,12 @@ func (s *controlServer) handlePutConfig(w http.ResponseWriter, r *http.Request) 
 	}
 	writeJSON(w, http.StatusOK, configView{
 		Worker: workerConfig{
-			Port:        cfg.Worker.Port,
-			RequireAuth: cfg.Worker.RequireAuth,
-			EnablePprof: cfg.Worker.EnablePprof,
-			PprofPort:   cfg.Worker.PprofPort,
-			Models:      append([]string(nil), cfg.Worker.Models...),
+			Port:            cfg.Worker.Port,
+			RequireAuth:     cfg.Worker.RequireAuth,
+			EnablePprof:     cfg.Worker.EnablePprof,
+			PprofPort:       cfg.Worker.PprofPort,
+			ManagementToken: cfg.Worker.ManagementToken,
+			Models:          append([]string(nil), cfg.Worker.Models...),
 		},
 		Random:    cfg.Random,
 		Chat:      cfg.Chat,

@@ -319,9 +319,9 @@ func (a *workerApp) wrapPublic(route string, next func(http.ResponseWriter, *htt
 			})
 		}()
 
-		if a.cfg.Worker.RequireAuth && strings.HasPrefix(r.URL.Path, "/v1/") && !hasAuthorization(r) {
-			meta.Error = "missing api key"
-			writeOpenAIError(writer, http.StatusUnauthorized, "authentication_error", "missing api key", "missing_api_key", "")
+		if a.cfg.Worker.RequireAuth && strings.HasPrefix(r.URL.Path, "/v1/") && !hasValidAuthorization(r, a.cfg.Worker.ManagementToken) {
+			meta.Error = "invalid api key"
+			writeOpenAIError(writer, http.StatusUnauthorized, "authentication_error", "invalid api key", "invalid_api_key", "")
 			return
 		}
 
@@ -1078,6 +1078,30 @@ func hasAuthorization(r *http.Request) bool {
 	return strings.TrimSpace(r.Header.Get("Authorization")) != "" ||
 		strings.TrimSpace(r.Header.Get("x-api-key")) != "" ||
 		strings.TrimSpace(r.Header.Get("api-key")) != ""
+}
+
+func hasValidAuthorization(r *http.Request, token string) bool {
+	// Check Authorization header (Bearer token)
+	auth := strings.TrimSpace(r.Header.Get("Authorization"))
+	if auth != "" {
+		parts := strings.SplitN(auth, " ", 2)
+		if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") && strings.TrimSpace(parts[1]) == token {
+			return true
+		}
+		// Try exact match (some clients send just the token)
+		if auth == token {
+			return true
+		}
+	}
+	// Check x-api-key header
+	if strings.TrimSpace(r.Header.Get("x-api-key")) == token {
+		return true
+	}
+	// Check api-key header
+	if strings.TrimSpace(r.Header.Get("api-key")) == token {
+		return true
+	}
+	return false
 }
 
 func hasChatToolResult(messages []dto.Message) bool {

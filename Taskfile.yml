@@ -64,3 +64,21 @@ tasks:
     desc: 重启 Docker Compose 服务
     cmds:
       - docker-compose restart
+
+  # 启动 mock-upstream 测试服务器
+  mock:
+    desc: 启动 mock-upstream 测试服务器
+    cmds:
+      - cd tools/mock-upstream && go run . control
+
+  # 启动 load-tester 控制台
+  loadtest:
+    desc: 启动 load-tester 控制台
+    cmds:
+      - cd tools/load-tester && go run . control
+
+  # 构建 load-tester 工具
+  loadtest-build:
+    desc: 构建 load-tester 工具
+    cmds:
+      - cd tools/load-tester && go build -o load-tester .
