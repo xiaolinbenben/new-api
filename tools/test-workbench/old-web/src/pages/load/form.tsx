@@ -40,7 +40,7 @@ export function RunProfileForm(props: RunProfileFormProps) {
   const config = value.config;
 
   return (
-    <div className='config-editor'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <EditorIntro
         title='压测参数配置'
         description='这里控制并发、升压时间、持续时间、请求超时和采样策略。你可以用它定义一套“平稳巡航”或“强压打满”的压测模板。'
@@ -48,7 +48,7 @@ export function RunProfileForm(props: RunProfileFormProps) {
       />
 
       <SectionCard title='基础压测参数' description='核心压测节奏：并发、升压、持续时长、请求上限和单请求超时。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='配置名称' hint='建议按目标和压力等级命名，例如“中压 SSE 回归”“图片接口突刺压测”。'>
             <Input value={value.name} onChange={(next) => onChange({ ...value, name: next })} placeholder='压测配置名称' />
           </Field>
@@ -101,7 +101,7 @@ export function RunProfileForm(props: RunProfileFormProps) {
       </SectionCard>
 
       <SectionCard title='采样与脱敏' description='工作台会把一部分请求、错误和响应内容落盘，方便回看。这里控制样本数量和敏感头脱敏策略。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='成功请求样本上限' hint='最多保留多少条普通请求样本，便于回放和复盘。'>
             <InputNumber
               value={config.sampling.max_request_samples}
@@ -182,7 +182,7 @@ export function ScenarioForm(props: ScenarioFormProps) {
   const isTaskFlow = config.mode === 'task_flow';
 
   return (
-    <div className='config-editor'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <EditorIntro
         title='场景配置'
         description='场景定义的是“发什么请求、怎么判断成功、是否需要轮询任务结果”。你可以用它覆盖聊天、图片、视频或任意 HTTP 接口。'
@@ -190,7 +190,7 @@ export function ScenarioForm(props: ScenarioFormProps) {
       />
 
       <SectionCard title='场景基本信息' description='先定义显示名称、内部标识、是否启用、权重、模式和预置模板。权重越高，该场景在压测中的流量占比越大。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='场景名称' hint='用于运行历史、图表拆分和统计表展示。建议写成业务可读的名称。'>
             <Input value={config.name} onChange={(next) => updateConfig({ ...config, name: next })} placeholder='例如：聊天流式对话' />
           </Field>
@@ -274,7 +274,7 @@ export function ScenarioForm(props: ScenarioFormProps) {
           </SectionCard>
 
           <SectionCard title='任务轮询流程' description='第二步轮询任务状态，直到命中成功状态或失败状态。这里定义轮询地址、提取器和轮询终止条件。'>
-            <div className='form-grid two-columns'>
+            <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               <Field label='任务 ID 提取路径' hint='从提交任务接口的 JSON 响应中提取任务 ID，例如 id。'>
                 <Input
                   value={config.extractors.task_id_path}
@@ -343,7 +343,7 @@ export function ScenarioForm(props: ScenarioFormProps) {
                 })
               }
             />
-            <div className='form-grid two-columns'>
+            <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               <StringListEditor
                 label='成功状态值'
                 hint='轮询接口响应中的状态命中这些值之一时，判定任务成功完成。'

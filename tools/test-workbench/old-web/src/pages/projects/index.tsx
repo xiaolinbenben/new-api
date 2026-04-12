@@ -14,8 +14,8 @@ export function ProjectsPage() {
         description='项目页只负责项目和环境。环境的详细表单、默认目标、鉴权和监听器绑定都集中在这里管理。'
       />
 
-      <Card className='panel wide'>
-        <div className='page-toolbar'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <Input value={forms.projectName} onChange={forms.setProjectName} placeholder='新项目名称' />
           <Input value={forms.projectDescription} onChange={forms.setProjectDescription} placeholder='项目描述' />
           <Button theme='solid' onClick={() => mutations.createProject.mutate()}>
@@ -24,8 +24,8 @@ export function ProjectsPage() {
         </div>
       </Card>
 
-      <Card className='panel wide'>
-        <div className='section-headline'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+        <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div>
             <Typography.Title heading={5}>环境列表</Typography.Title>
             <Typography.Text type='tertiary'>
@@ -55,7 +55,7 @@ export function ProjectsPage() {
         />
       </Card>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         {drafts.environmentDraft ? (
           <EnvironmentForm
             value={drafts.environmentDraft}

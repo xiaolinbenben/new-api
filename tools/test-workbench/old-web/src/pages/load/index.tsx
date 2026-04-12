@@ -14,8 +14,8 @@ export function LoadPage() {
         description='压测页拆成“运行参数模板”和“场景模板”两部分，后续再扩展压测能力时，不需要再改动整体布局。'
       />
 
-      <Card className='panel wide'>
-        <div className='page-toolbar'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <Select
             value={selection.selectedRunProfileId}
             style={{ width: 320 }}
@@ -35,7 +35,7 @@ export function LoadPage() {
         </div>
       </Card>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         {drafts.runProfileDraft ? (
           <RunProfileForm value={drafts.runProfileDraft} onChange={drafts.setRunProfileDraft} onSave={() => mutations.saveRunProfile.mutate()} />
         ) : (
@@ -43,8 +43,8 @@ export function LoadPage() {
         )}
       </Card>
 
-      <Card className='panel wide'>
-        <div className='section-headline'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+        <div style={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div>
             <Typography.Title heading={5}>场景选择</Typography.Title>
             <Typography.Text type='tertiary'>场景负责定义请求形态。你可以在这里管理单次请求、流式输出和任务轮询三种模型。</Typography.Text>
@@ -64,7 +64,7 @@ export function LoadPage() {
         </div>
       </Card>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         {drafts.scenarioDraft ? (
           <ScenarioForm value={drafts.scenarioDraft} onChange={drafts.setScenarioDraft} onSave={() => mutations.saveScenario.mutate()} />
         ) : (
@@ -72,7 +72,7 @@ export function LoadPage() {
         )}
       </Card>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         <Typography.Title heading={5}>活动压测</Typography.Title>
         <Table
           pagination={false}

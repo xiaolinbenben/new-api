@@ -14,10 +14,10 @@ export interface RequestFormValue {
 
 export function EditorIntro(props: { title: string; description: string; extra?: ReactNode }) {
   return (
-    <div className='editor-intro'>
+    <div style={{ paddingBottom: '4px', borderBottom: '1px dashed rgba(26, 36, 48, 0.08)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
       <div>
         <Typography.Title heading={5}>{props.title}</Typography.Title>
-        <Typography.Text type='tertiary'>{props.description}</Typography.Text>
+        <Typography.Text type='tertiary' style={{ display: 'block' }}>{props.description}</Typography.Text>
       </div>
       {props.extra}
     </div>
@@ -26,19 +26,19 @@ export function EditorIntro(props: { title: string; description: string; extra?:
 
 export function SectionCard(props: { title: string; description: string; children: ReactNode }) {
   return (
-    <section className='editor-section'>
-      <div className='editor-section-head'>
-        <Typography.Title heading={6}>{props.title}</Typography.Title>
-        <Typography.Text type='tertiary'>{props.description}</Typography.Text>
+    <section style={{ padding: '18px', borderRadius: '18px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 255, 255, 0.62)' }}>
+      <div style={{ marginBottom: '16px' }}>
+        <Typography.Title heading={6} style={{ display: 'block' }}>{props.title}</Typography.Title>
+        <Typography.Text type='tertiary' style={{ display: 'block' }}>{props.description}</Typography.Text>
       </div>
-      <div className='section-stack'>{props.children}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>{props.children}</div>
     </section>
   );
 }
 
 export function Field(props: { label: string; hint?: string; children: ReactNode }) {
   return (
-    <div className='field-block'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 }}>
       <Typography.Text strong>{props.label}</Typography.Text>
       {props.hint ? <Typography.Text type='tertiary'>{props.hint}</Typography.Text> : null}
       {props.children}
@@ -48,7 +48,7 @@ export function Field(props: { label: string; hint?: string; children: ReactNode
 
 export function ActionBar(props: { onSave: () => void; onDelete?: () => void; deleteLabel?: string }) {
   return (
-    <div className='editor-actions'>
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', gap: '12px', paddingTop: '8px' }}>
       <Button theme='solid' type='primary' onClick={props.onSave}>
         保存配置
       </Button>
@@ -87,9 +87,9 @@ export function KeyValueEditor(props: {
 
   return (
     <Field label={props.label} hint={props.hint}>
-      <div className='list-editor'>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {rows.map((row, index) => (
-          <div className='kv-row' key={`${props.label}-${index}`}>
+          <div style={{ display: 'grid', gap: '10px', alignItems: 'center', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto' }} key={`${props.label}-${index}`}>
             <Input
               value={row.key}
               placeholder={props.keyPlaceholder}
@@ -137,9 +137,9 @@ export function StringListEditor(props: {
 
   return (
     <Field label={props.label} hint={props.hint}>
-      <div className='list-editor'>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {rows.map((item, index) => (
-          <div className='single-row' key={`${props.label}-${index}`}>
+          <div style={{ display: 'grid', gap: '10px', alignItems: 'center', gridTemplateColumns: 'minmax(0, 1fr) auto' }} key={`${props.label}-${index}`}>
             <Input value={item} placeholder={props.placeholder} onChange={(next) => updateValue(index, next)} />
             <Button type='danger' theme='borderless' onClick={() => removeValue(index)}>
               删除
@@ -173,9 +173,9 @@ export function StatusCodeEditor(props: {
 
   return (
     <Field label={props.label} hint={props.hint}>
-      <div className='list-editor'>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         {rows.map((item, index) => (
-          <div className='single-row' key={`${props.label}-${index}`}>
+          <div style={{ display: 'grid', gap: '10px', alignItems: 'center', gridTemplateColumns: 'minmax(0, 1fr) auto' }} key={`${props.label}-${index}>
             <InputNumber value={item} min={100} max={599} onNumberChange={(next) => updateValue(index, asNumber(next, item))} />
             <Button type='danger' theme='borderless' onClick={() => removeValue(index)}>
               删除
@@ -198,7 +198,7 @@ export function IntRangeEditor(props: {
 }) {
   return (
     <Field label={props.label} hint={props.hint}>
-      <div className='range-grid'>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
         <Field label='最小值'>
           <InputNumber value={props.value.min} onNumberChange={(next) => props.onChange({ ...props.value, min: asNumber(next, props.value.min) })} />
         </Field>
@@ -218,7 +218,7 @@ export function FloatRangeEditor(props: {
 }) {
   return (
     <Field label={props.label} hint={props.hint}>
-      <div className='range-grid'>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
         <Field label='最小值'>
           <InputNumber
             value={props.value.min}
@@ -258,10 +258,10 @@ export function BooleanCard(props: {
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <div className='boolean-card'>
-      <div className='boolean-copy'>
-        <Typography.Text strong>{props.label}</Typography.Text>
-        <Typography.Text type='tertiary'>{props.description}</Typography.Text>
+    <div style={{ padding: '14px 16px', borderRadius: '14px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(15, 118, 110, 0.04)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+      <div style={{ flex: 1 }}>
+        <Typography.Text strong style={{ display: 'block' }}>{props.label}</Typography.Text>
+        <Typography.Text type='tertiary' style={{ display: 'block' }}>{props.description}</Typography.Text>
       </div>
       <Switch checked={props.checked} onChange={props.onChange} />
     </div>
@@ -280,12 +280,12 @@ export function RequestConfigEditor(props: {
   const { title, description, value, onChange, pathLabel = '请求路径', pathHint, bodyDisabled } = props;
 
   return (
-    <div className='request-editor'>
-      <div className='request-editor-head'>
-        <Typography.Title heading={6}>{title}</Typography.Title>
-        <Typography.Text type='tertiary'>{description}</Typography.Text>
+    <div style={{ padding: '18px', borderRadius: '18px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 255, 255, 0.62)' }}>
+      <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+        <Typography.Title heading={6} style={{ display: 'block' }}>{title}</Typography.Title>
+        <Typography.Text type='tertiary' style={{ display: 'block' }}>{description}</Typography.Text>
       </div>
-      <div className='form-grid two-columns'>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <Field label='请求方法' hint='支持常见 HTTP 方法，通常聊天与图片接口使用 POST。'>
           <Select
             value={value.method}

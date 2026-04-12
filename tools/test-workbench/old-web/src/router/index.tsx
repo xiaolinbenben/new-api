@@ -33,7 +33,7 @@ const NotFoundPage = lazy(async () => {
 });
 
 function withSuspense(element: ReactNode) {
-  return <Suspense fallback={<div className='route-loading'>页面加载中...</div>}>{element}</Suspense>;
+  return <Suspense fallback={<div style={{ padding: '40px 0', color: 'rgba(26, 36, 48, 0.72)', fontSize: '14px' }}>页面加载中...</div>}>{element}</Suspense>;
 }
 
 const routeObjects: RouteObject[] = [

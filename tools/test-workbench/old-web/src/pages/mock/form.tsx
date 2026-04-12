@@ -29,7 +29,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
   const config = value.config;
 
   return (
-    <div className='config-editor'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <EditorIntro
         title='Mock 行为配置'
         description='这里不是简单的固定响应，而是一整套随机行为模型。你可以控制延迟、错误率、文本生成特征、图片与视频任务模拟方式。'
@@ -37,7 +37,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
       />
 
       <SectionCard title='基础定义' description='先定义配置名称、可用模型列表，以及是否开放 pprof 调试端口。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='配置名称' hint='建议按用途命名，例如“稳定回归模拟”“高抖动异常模拟”等。'>
             <Input value={value.name} onChange={(next) => onChange({ ...value, name: next })} placeholder='Mock 配置名称' />
           </Field>
@@ -71,7 +71,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
       </SectionCard>
 
       <SectionCard title='全局随机策略' description='这一组参数决定所有模拟响应的延迟、错误注入比例，以及 token / chunk 的基础随机范围。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='随机模式' hint='真随机适合压测波动场景；固定种子适合复现问题和做稳定回归。'>
             <Select
               value={config.random.mode}
@@ -93,7 +93,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
             />
           </Field>
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <IntRangeEditor
             label='响应延迟范围（毫秒）'
             hint='所有接口都会在这个范围内随机延迟，适合模拟真实上游抖动。'
@@ -109,7 +109,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
             }
           />
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <IntRangeEditor
             label='默认流式分块范围'
             hint='SSE 返回时会随机拆成多个片段，分块数越大越接近真实流式输出。'
@@ -118,7 +118,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
               onChange({ ...value, config: { ...config, random: { ...config.random, default_stream_chunks: next } } })
             }
           />
-          <div className='editor-subgrid'>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px 16px' }}>
             <ProbabilityField
               label='普通错误率'
               hint='一般性请求错误的概率，适合模拟参数错误或非预期失败。'
@@ -162,7 +162,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
       </SectionCard>
 
       <SectionCard title='图片生成行为' description='这里配置图片尺寸、返回 URL 或 Base64 的比例、水印策略和图片体积范围。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <IntRangeEditor
             label='单次图片数量范围'
             hint='同一次请求返回几张图片。适合模拟不同上游的多图输出能力。'
@@ -176,7 +176,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
             onChange={(next) => onChange({ ...value, config: { ...config, images: { ...config.images, image_bytes: next } } })}
           />
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <ProbabilityField
             label='URL 返回比例'
             hint='越接近 1，越倾向返回图片 URL；越接近 0，越倾向返回 Base64。'
@@ -223,7 +223,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
       </SectionCard>
 
       <SectionCard title='视频任务行为' description='这里模拟异步视频生成任务的时长、轮询速度、失败率与产物大小，用于验证任务流编排。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <FloatRangeEditor
             label='视频时长范围（秒）'
             hint='创建任务时会在这个范围内随机生成时长。'
@@ -239,7 +239,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
             onChange={(next) => onChange({ ...value, config: { ...config, videos: { ...config.videos, fps: next } } })}
           />
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <IntRangeEditor
             label='轮询间隔范围（毫秒）'
             hint='任务状态变化的节奏与这里的随机区间有关。'
@@ -257,7 +257,7 @@ export function MockProfileForm(props: MockProfileFormProps) {
             }
           />
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <IntRangeEditor
             label='进度抖动范围'
             hint='轮询返回的进度会加入这里的抖动，避免每次都线性增长。'
@@ -295,8 +295,8 @@ function TextBehaviorSection(props: {
   const { value, onChange } = props;
 
   return (
-    <div className='section-stack'>
-      <div className='form-grid two-columns'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <IntRangeEditor
           label='文本 token 范围'
           hint='决定生成文本的长度区间。范围越大，返回内容波动越明显。'
@@ -310,7 +310,7 @@ function TextBehaviorSection(props: {
           onChange={(checked) => onChange({ ...value, allow_stream: checked })}
         />
       </div>
-      <div className='form-grid two-columns'>
+      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
         <IntRangeEditor
           label='工具调用次数范围'
           hint='命中工具调用后，一次响应里可能出现的工具调用数量。'
@@ -324,7 +324,7 @@ function TextBehaviorSection(props: {
           onChange={(next) => onChange({ ...value, tool_arguments_bytes: next })}
         />
       </div>
-      <div className='editor-subgrid'>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px 16px' }}>
         <ProbabilityField
           label='用量统计出现概率'
           hint='控制响应中是否附带 usage 字段。'

@@ -21,7 +21,7 @@ export function EnvironmentForm(props: EnvironmentFormProps) {
   const { value, mockProfiles, runProfiles, onChange, onSave, onDelete } = props;
 
   return (
-    <div className='config-editor'>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <EditorIntro
         title='环境配置'
         description='这里定义压测目标、默认请求头、内置 Mock 监听器以及本环境绑定的默认配置。切换不同环境后，工作台会自动基于这里的设置启动或执行。'
@@ -29,7 +29,7 @@ export function EnvironmentForm(props: EnvironmentFormProps) {
       />
 
       <SectionCard title='基础信息' description='先定义环境本身的名称、目标类型，以及本环境默认绑定哪一套 Mock / 压测配置。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='环境名称' hint='用于列表展示、监听器面板以及运行历史关联显示。'>
             <Input value={value.name} onChange={(next) => onChange({ ...value, name: next })} placeholder='例如：本地联调环境' />
           </Field>
@@ -58,7 +58,7 @@ export function EnvironmentForm(props: EnvironmentFormProps) {
       </SectionCard>
 
       <SectionCard title='目标地址与默认请求' description='这里控制外部 HTTP 目标地址、TLS 行为以及所有场景都会继承的默认请求头。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='外部基础地址' hint='仅在“外部 HTTP”模式下生效，例如 https://example.com。内置 Mock 模式下可留空。'>
             <Input
               value={value.external_base_url}
@@ -86,7 +86,7 @@ export function EnvironmentForm(props: EnvironmentFormProps) {
       </SectionCard>
 
       <SectionCard title='内置 Mock 监听器' description='这里决定内置模拟器监听在哪个地址、是否自动启动、以及是否要求调用方带鉴权令牌。'>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='监听主机' hint='通常本机测试使用 0.0.0.0 或 127.0.0.1。'>
             <Input
               value={value.mock_bind_host}
@@ -103,7 +103,7 @@ export function EnvironmentForm(props: EnvironmentFormProps) {
             />
           </Field>
         </div>
-        <div className='form-grid two-columns'>
+        <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <Field label='鉴权模式' hint='如果启用，访问该 Mock 的客户端必须带正确令牌。适合多人共用环境时做隔离。'>
             <BooleanCard
               checked={value.mock_require_auth}

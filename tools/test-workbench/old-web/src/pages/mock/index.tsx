@@ -14,8 +14,8 @@ export function MockPage() {
         description='Mock 页只处理模拟器行为和运行态观察。配置编辑、监听器控制和事件观察全部收拢在一个页面里。'
       />
 
-      <Card className='panel wide'>
-        <div className='page-toolbar'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <Select
             value={selection.selectedMockProfileId}
             style={{ width: 320 }}
@@ -35,7 +35,7 @@ export function MockPage() {
         </div>
       </Card>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         {drafts.mockProfileDraft ? (
           <MockProfileForm value={drafts.mockProfileDraft} onChange={drafts.setMockProfileDraft} onSave={() => mutations.saveMockProfile.mutate()} />
         ) : (
@@ -43,8 +43,8 @@ export function MockPage() {
         )}
       </Card>
 
-      <div className='dashboard-grid'>
-        <Card className='panel'>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'minmax(320px, 0.9fr) minmax(420px, 1.1fr)', gap: '16px' }}>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
           <Typography.Title heading={5}>活动监听器</Typography.Title>
           <Table
             pagination={false}
@@ -57,7 +57,7 @@ export function MockPage() {
             ]}
           />
         </Card>
-        <Card className='panel'>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
           <Typography.Title heading={5}>路由统计</Typography.Title>
           <Table
             pagination={false}
@@ -72,7 +72,7 @@ export function MockPage() {
         </Card>
       </div>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         <Typography.Title heading={5}>最近事件</Typography.Title>
         <Typography.Text type='tertiary'>保留原始事件结构，方便你在排查时直接复制请求、错误或视频任务详情。</Typography.Text>
         <TextArea rows={12} value={safePretty(queries.eventsQuery.data ?? { requests: [], errors: [], videos: [] })} readOnly />

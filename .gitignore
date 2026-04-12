@@ -32,5 +32,5 @@ data/
 tmp
 
 /tools/test-workbench/data/
-/tools/test-workbench/web/node_modules/
-/tools/test-workbench/web/dist/
+node_modules/
+dist/

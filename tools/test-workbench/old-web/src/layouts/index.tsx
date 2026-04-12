@@ -12,19 +12,17 @@ export function WorkbenchLayout() {
   const { queries, selection, selected } = useWorkbench();
 
   return (
-    <Layout className='shell'>
-      <Sider className='shell-sider'>
-        <div className='brand'>
-          <div className='brand-kicker'>new-api</div>
-          <div className='brand-title'>测试工作台</div>
-          <div className='brand-copy'>结构化配置、Mock 模拟、压测与回放</div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider style={{ background: 'linear-gradient(180deg, #143642 0%, #1d3f49 100%)', color: 'white', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div style={{ padding: '28px 20px 12px' }}>
+          <div style={{ fontSize: '28px', fontWeight: 700 }}>测试工作台</div>
         </div>
         <Nav
           selectedKeys={[location.pathname]}
           items={navigationItems}
           onSelect={(data) => navigate(String(data.itemKey))}
           footer={
-            <div className='project-pill'>
+            <div style={{ margin: '16px', padding: '12px 14px', borderRadius: '14px', background: 'rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span>当前项目</span>
               <strong>{selected.selectedProject?.name ?? '加载中...'}</strong>
             </div>
@@ -32,7 +30,7 @@ export function WorkbenchLayout() {
         />
       </Sider>
       <Layout>
-        <Header className='shell-header'>
+        <Header style={{ background: 'transparent', padding: '18px 24px 0' }}>
           <Space>
             <Select
               value={selection.selectedProjectId}
@@ -46,7 +44,7 @@ export function WorkbenchLayout() {
             <Tag color='orange'>{queries.mockListenersQuery.data?.length ?? 0} 个活动 Mock 监听器</Tag>
           </Space>
         </Header>
-        <Content className='shell-content'>
+        <Content style={{ padding: '20px 24px 32px' }}>
           <Outlet />
         </Content>
       </Layout>

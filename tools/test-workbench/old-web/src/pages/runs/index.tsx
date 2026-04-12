@@ -32,8 +32,8 @@ export function RunsPage() {
         description='运行记录页独立负责历史查询、统计图和样本回放。后续如果要加筛选器、分页或导出，也只需要改这里。'
       />
 
-      <div className='dashboard-grid'>
-        <Card className='panel'>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'minmax(320px, 0.9fr) minmax(420px, 1.1fr)', gap: '16px' }}>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
           <Typography.Title heading={5}>运行历史</Typography.Title>
           <Table
             pagination={false}
@@ -57,17 +57,17 @@ export function RunsPage() {
           />
         </Card>
 
-        <Card className='panel'>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
           <Typography.Title heading={5}>运行摘要</Typography.Title>
           {queries.runDetailQuery.data ? (
             <>
-              <div className='card-grid compact'>
+              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <StatCard title='请求数' value={queries.runDetailQuery.data.summary.total_requests} subtitle='累计请求' />
                 <StatCard title='错误数' value={queries.runDetailQuery.data.summary.errors} subtitle='失败请求' />
                 <StatCard title='P95' value={`${Number(queries.runDetailQuery.data.summary.p95_ms ?? 0).toFixed(1)} ms`} subtitle='延迟' />
                 <StatCard title='TPS' value={`${Number(queries.runDetailQuery.data.summary.current_tps ?? 0).toFixed(2)}`} subtitle='实时输出' />
               </div>
-              <Card className='inner-panel'>
+              <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
                 <Typography.Title heading={6}>场景拆分</Typography.Title>
                 <VChart spec={scenarioChartSpec as never} style={{ height: 260 }} />
                 <Table
@@ -89,7 +89,7 @@ export function RunsPage() {
         </Card>
       </div>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         <Typography.Title heading={5}>样本</Typography.Title>
         <Typography.Text type='tertiary'>样本继续保留原始结构，方便精确复制请求、响应和错误信息进行复现。</Typography.Text>
         <TextArea rows={14} readOnly value={safePretty(queries.runDetailQuery.data?.samples ?? { requests: [], errors: [] })} />

@@ -30,15 +30,15 @@ export function DashboardPage() {
         description='从这里快速查看当前项目的环境状态、Mock 监听器健康度、最近运行结果，以及压测总体表现。'
       />
 
-      <div className='card-grid'>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '16px' }}>
         <StatCard title='项目数' value={queries.projectsQuery.data?.length ?? 0} subtitle='当前工作台中的配置空间' />
         <StatCard title='Mock 请求数' value={selected.selectedListener?.summary.total_requests ?? 0} subtitle='当前环境监听器累计请求' />
         <StatCard title='当前 QPS' value={(selected.selectedListener?.summary.current_qps ?? 0).toFixed(2)} subtitle='内置模拟器实时吞吐' />
         <StatCard title='实时 TPS' value={(queries.loadRunsQuery.data?.[0]?.summary.current_tps ?? 0).toFixed(2)} subtitle='压测实时输出速率' />
       </div>
 
-      <div className='dashboard-grid'>
-        <Card className='panel'>
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'minmax(320px, 0.9fr) minmax(420px, 1.1fr)', gap: '16px' }}>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
           <Descriptions
             title='运行态概览'
             data={[
@@ -56,14 +56,14 @@ export function DashboardPage() {
             ]}
           />
         </Card>
-        <Card className='panel'>
-          <Card className='inner-panel'>
+        <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
+          <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
             <VChart spec={statusChartSpec as never} style={{ height: 280 }} />
           </Card>
         </Card>
       </div>
 
-      <Card className='panel wide'>
+      <Card style={{ width: '100%', borderRadius: '22px', border: '1px solid rgba(26, 36, 48, 0.08)', background: 'rgba(255, 252, 245, 0.88)', backdropFilter: 'blur(10px)', boxShadow: '0 24px 60px rgba(32, 43, 52, 0.08)' }}>
         <Typography.Title heading={5}>最近运行</Typography.Title>
         <Table
           pagination={false}

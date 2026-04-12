@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@semi-css';
 import App from './App';
-import './styles.css';
 
 const client = new QueryClient();
 
