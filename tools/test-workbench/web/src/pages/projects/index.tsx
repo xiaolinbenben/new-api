@@ -1,8 +1,8 @@
 import { Button, Card, Input, Space, Table, Typography } from '@douyinfe/semi-ui';
-import { PageHeader } from '../components/PageHeader';
-import { useWorkbench } from '../features/workbench/context';
-import { formatTargetType } from '../features/workbench/helpers';
-import { EnvironmentEditor } from '../config-editors';
+import { PageHeader } from '../../components/PageHeader';
+import { useWorkbench } from '../../features/workbench/context';
+import { formatTargetType } from '../../features/workbench/helpers';
+import { EnvironmentForm } from './form';
 
 export function ProjectsPage() {
   const { forms, queries, drafts, selection, mutations, actions } = useWorkbench();
@@ -57,7 +57,7 @@ export function ProjectsPage() {
 
       <Card className='panel wide'>
         {drafts.environmentDraft ? (
-          <EnvironmentEditor
+          <EnvironmentForm
             value={drafts.environmentDraft}
             mockProfiles={queries.mockProfilesQuery.data ?? []}
             runProfiles={queries.runProfilesQuery.data ?? []}

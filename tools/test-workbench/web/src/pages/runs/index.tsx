@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Button, Card, Space, Table, Tag, TextArea, Typography } from '@douyinfe/semi-ui';
 import { VChart } from '@visactor/react-vchart';
-import { PageHeader } from '../components/PageHeader';
-import { StatCard } from '../components/StatCard';
-import { useWorkbench } from '../features/workbench/context';
-import { formatScenarioMode, formatStatus, safePretty, statusColor } from '../features/workbench/helpers';
+import { PageHeader } from '../../components/PageHeader';
+import { StatCard } from '../../components/StatCard';
+import { useWorkbench } from '../../features/workbench/context';
+import { formatScenarioMode, formatStatus, safePretty, statusColor } from '../../features/workbench/helpers';
 
 export function RunsPage() {
   const { queries, selection } = useWorkbench();

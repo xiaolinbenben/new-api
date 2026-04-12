@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { Button, Card, Descriptions, Space, Table, Tag, Typography } from '@douyinfe/semi-ui';
 import { VChart } from '@visactor/react-vchart';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/PageHeader';
-import { StatCard } from '../components/StatCard';
-import { useWorkbench } from '../features/workbench/context';
-import { formatStatus, statusColor } from '../features/workbench/helpers';
+import { PageHeader } from '../../components/PageHeader';
+import { StatCard } from '../../components/StatCard';
+import { useWorkbench } from '../../features/workbench/context';
+import { formatStatus, statusColor } from '../../features/workbench/helpers';
 
 export function DashboardPage() {
   const navigate = useNavigate();

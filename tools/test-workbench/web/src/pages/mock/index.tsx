@@ -1,8 +1,8 @@
 import { Button, Card, Select, Space, Table, Tag, TextArea, Typography } from '@douyinfe/semi-ui';
-import { PageHeader } from '../components/PageHeader';
-import { MockProfileEditor } from '../config-editors';
-import { useWorkbench } from '../features/workbench/context';
-import { formatStatus, safePretty, statusColor } from '../features/workbench/helpers';
+import { PageHeader } from '../../components/PageHeader';
+import { useWorkbench } from '../../features/workbench/context';
+import { formatStatus, safePretty, statusColor } from '../../features/workbench/helpers';
+import { MockProfileForm } from './form';
 
 export function MockPage() {
   const { queries, drafts, selection, mutations, actions } = useWorkbench();
@@ -37,7 +37,7 @@ export function MockPage() {
 
       <Card className='panel wide'>
         {drafts.mockProfileDraft ? (
-          <MockProfileEditor value={drafts.mockProfileDraft} onChange={drafts.setMockProfileDraft} onSave={() => mutations.saveMockProfile.mutate()} />
+          <MockProfileForm value={drafts.mockProfileDraft} onChange={drafts.setMockProfileDraft} onSave={() => mutations.saveMockProfile.mutate()} />
         ) : (
           <Typography.Text type='tertiary'>请选择一个 Mock 配置。</Typography.Text>
         )}

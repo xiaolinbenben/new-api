@@ -1,35 +1,34 @@
 import { Suspense, lazy, type ReactNode } from 'react';
-import { Navigate, useRoutes, type RouteObject } from 'react-router-dom';
-import { AppShell } from './AppShell';
-import { navigationItems } from './navigation';
+import { Navigate, type RouteObject, useRoutes } from 'react-router-dom';
+import { WorkbenchLayout } from '../layouts';
 
 const DashboardPage = lazy(async () => {
-  const module = await import('../pages/DashboardPage');
+  const module = await import('../pages/dashboard');
   return { default: module.DashboardPage };
 });
 
 const ProjectsPage = lazy(async () => {
-  const module = await import('../pages/ProjectsPage');
+  const module = await import('../pages/projects');
   return { default: module.ProjectsPage };
 });
 
 const MockPage = lazy(async () => {
-  const module = await import('../pages/MockPage');
+  const module = await import('../pages/mock');
   return { default: module.MockPage };
 });
 
 const LoadPage = lazy(async () => {
-  const module = await import('../pages/LoadPage');
+  const module = await import('../pages/load');
   return { default: module.LoadPage };
 });
 
 const RunsPage = lazy(async () => {
-  const module = await import('../pages/RunsPage');
+  const module = await import('../pages/runs');
   return { default: module.RunsPage };
 });
 
 const NotFoundPage = lazy(async () => {
-  const module = await import('../pages/NotFoundPage');
+  const module = await import('../pages/not-found');
   return { default: module.NotFoundPage };
 });
 
@@ -40,7 +39,7 @@ function withSuspense(element: ReactNode) {
 const routeObjects: RouteObject[] = [
   {
     path: '/',
-    element: <AppShell />,
+    element: <WorkbenchLayout />,
     children: [
       { index: true, element: <Navigate to='dashboard' replace /> },
       { path: 'dashboard', element: withSuspense(<DashboardPage />) },
@@ -53,6 +52,6 @@ const routeObjects: RouteObject[] = [
   }
 ];
 
-export function AppRoutes() {
+export function AppRouter() {
   return useRoutes(routeObjects);
 }

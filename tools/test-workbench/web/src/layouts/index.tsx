@@ -2,11 +2,11 @@ import { Layout, Nav, Select, Space, Tag } from '@douyinfe/semi-ui';
 import { IconTreeTriangleDown } from '@douyinfe/semi-icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useWorkbench } from '../features/workbench/context';
-import { navigationItems } from './navigation';
+import { navigationItems } from '../router/navigation';
 
 const { Header, Sider, Content } = Layout;
 
-export function AppShell() {
+export function WorkbenchLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { queries, selection, selected } = useWorkbench();

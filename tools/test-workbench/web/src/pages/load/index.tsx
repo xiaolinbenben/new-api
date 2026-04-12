@@ -1,8 +1,8 @@
 import { Button, Card, Select, Space, Table, Tag, Typography } from '@douyinfe/semi-ui';
-import { PageHeader } from '../components/PageHeader';
-import { RunProfileEditor, ScenarioEditor } from '../config-editors';
-import { useWorkbench } from '../features/workbench/context';
-import { formatStatus, statusColor } from '../features/workbench/helpers';
+import { PageHeader } from '../../components/PageHeader';
+import { useWorkbench } from '../../features/workbench/context';
+import { formatStatus, statusColor } from '../../features/workbench/helpers';
+import { RunProfileForm, ScenarioForm } from './form';
 
 export function LoadPage() {
   const { queries, drafts, selection, mutations, actions } = useWorkbench();
@@ -37,7 +37,7 @@ export function LoadPage() {
 
       <Card className='panel wide'>
         {drafts.runProfileDraft ? (
-          <RunProfileEditor value={drafts.runProfileDraft} onChange={drafts.setRunProfileDraft} onSave={() => mutations.saveRunProfile.mutate()} />
+          <RunProfileForm value={drafts.runProfileDraft} onChange={drafts.setRunProfileDraft} onSave={() => mutations.saveRunProfile.mutate()} />
         ) : (
           <Typography.Text type='tertiary'>请选择一个压测配置。</Typography.Text>
         )}
@@ -66,7 +66,7 @@ export function LoadPage() {
 
       <Card className='panel wide'>
         {drafts.scenarioDraft ? (
-          <ScenarioEditor value={drafts.scenarioDraft} onChange={drafts.setScenarioDraft} onSave={() => mutations.saveScenario.mutate()} />
+          <ScenarioForm value={drafts.scenarioDraft} onChange={drafts.setScenarioDraft} onSave={() => mutations.saveScenario.mutate()} />
         ) : (
           <Typography.Text type='tertiary'>请选择一个场景。</Typography.Text>
         )}
