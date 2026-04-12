@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -37,7 +38,7 @@ func newControlServer(bootstrap bootstrapConfig, store *configStore, bridge work
 
 func (s *controlServer) run(ctx context.Context) error {
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%d", s.bootstrap.ControlPort),
+		Addr:              fmt.Sprintf("0.0.0.0:%d", s.bootstrap.ControlPort),
 		Handler:           s.handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
@@ -54,7 +55,23 @@ func (s *controlServer) run(ctx context.Context) error {
 	// Wait a moment for server to start
 	time.Sleep(100 * time.Millisecond)
 	fmt.Printf("\nMock Upstream 控制台已启动\n")
-	fmt.Printf("访问地址: http://localhost:%d\n\n", s.bootstrap.ControlPort)
+	// 获取本机IP地址
+	hostIP := "localhost"
+	addrs, err := net.InterfaceAddrs()
+	if err == nil {
+		for _, addr := range addrs {
+			if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+				if ipNet.IP.To4() != nil {
+					ip := ipNet.IP.String()
+					if strings.HasPrefix(ip, "192.") || strings.HasPrefix(ip, "10.") || strings.HasPrefix(ip, "172.") {
+						hostIP = ip
+						break
+					}
+				}
+			}
+		}
+	}
+	fmt.Printf("访问地址: http://%s:%d\n\n", hostIP, s.bootstrap.ControlPort)
 
 	select {
 	case <-ctx.Done():
@@ -256,12 +273,4 @@ func (s *controlServer) clearSession(w http.ResponseWriter, r *http.Request) {
 		delete(s.sessions, cookie.Value)
 		s.mu.Unlock()
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookieName,
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
-	})
 }

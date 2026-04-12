@@ -199,7 +199,7 @@ func newWorkerApp(cfg mockConfig) *workerApp {
 func (a *workerApp) run(ctx context.Context) error {
 	mux := a.handler()
 	server := &http.Server{
-		Addr:              fmt.Sprintf(":%d", a.cfg.Worker.Port),
+		Addr:              fmt.Sprintf("0.0.0.0:%d", a.cfg.Worker.Port),
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}

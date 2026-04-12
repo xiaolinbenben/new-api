@@ -4,713 +4,554 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mock Upstream 控制台</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/theme-chalk/dark/css-vars.css" />
     <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <script src="https://unpkg.com/@element-plus/icons-vue@2/dist/index.iife.js"></script>
+    <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="/assets/style.css" />
   </head>
-  <body class="bg-gray-900 text-gray-100">
+  <body>
     <div id="app">
-    <!-- 顶部导航栏 -->
-    <div class="bg-black border-b border-gray-700 px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-        </svg>
-        <span class="font-bold text-lg">Mock Upstream</span>
-      </div>
-      <div class="flex items-center gap-4">
-        <span class="text-gray-400 text-sm">{{ actionStatus }}</span>
-        <el-tag :type="workerStatusType" size="small">{{ workerStatusText }}</el-tag>
-        <el-button type="primary" size="small" @click="refreshAll">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          刷新
-        </el-button>
-      </div>
-    </div>
-
-    <div class="flex">
-      <!-- 左侧导航 -->
-      <div class="w-48 bg-gray-800 border-r border-gray-700 min-h-[calc(100vh-56px)]">
-        <div class="py-2">
-          <button
-            @click="activeTab = 'overview'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'overview' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            <span>总览</span>
-          </button>
-          <button
-            @click="activeTab = 'service'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'service' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span>服务控制</span>
-          </button>
-          <button
-            @click="activeTab = 'random'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'random' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-            <span>全局随机</span>
-          </button>
-          <button
-            @click="activeTab = 'conversation'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'conversation' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            <span>对话配置</span>
-          </button>
-          <button
-            @click="activeTab = 'media'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'media' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-            <span>媒体配置</span>
-          </button>
-          <button
-            @click="activeTab = 'data'"
-            :class="['w-full px-4 py-3 text-left flex items-center gap-2 transition-colors', activeTab === 'data' ? 'bg-blue-600 text-white border-r-2 border-blue-400' : 'text-gray-400 hover:bg-gray-700 hover:text-white']"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
-            <span>数据统计</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 主内容区 -->
-      <div class="flex-1 p-6">
-          <!-- 页面标题 -->
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h2 class="text-xl font-bold text-white mb-1">{{ currentTab.title }}</h2>
-              <p class="text-gray-400 text-sm">{{ currentTab.subtitle }}</p>
-            </div>
-            <div v-if="activeTab === 'overview'" class="flex gap-4">
-              <div class="text-right">
-                <div class="text-gray-400 text-xs">状态</div>
-                <div class="text-white font-bold">{{ workerStatusText }}</div>
-              </div>
-              <div class="w-px bg-gray-700"></div>
-              <div class="text-right">
-                <div class="text-gray-400 text-xs">QPS</div>
-                <div class="text-white font-bold">{{ summary?.current_qps?.toFixed(2) || '0' }}</div>
-              </div>
-              <div class="w-px bg-gray-700"></div>
-              <div class="text-right">
-                <div class="text-gray-400 text-xs">错误率</div>
-                <div class="text-white font-bold">{{ ((summary?.error_rate || 0) * 100).toFixed(2) }}%</div>
-              </div>
-            </div>
+      <el-container style="height: 100vh">
+        <el-header height="56px" class="app-header">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <div class="app-title">Mock Upstream</div>
           </div>
+          <el-space alignment="center">
+            <span class="status-text">{{ actionStatus }}</span>
+            <el-tag :type="workerStatusType" size="small">{{ workerStatusText }}</el-tag>
+            <el-button
+              size="small"
+              circle
+              @click="toggleDarkMode"
+              :title="isDarkMode ? '切换到亮色模式' : '切换到暗色模式'"
+            >
+              <el-icon v-if="isDarkMode"><Sunny /></el-icon>
+              <el-icon v-else><Moon /></el-icon>
+            </el-button>
+            <el-button type="primary" size="small" @click="refreshAll">刷新</el-button>
+          </el-space>
+        </el-header>
+        <el-container>
+          <el-aside width="180px" class="app-aside">
+            <el-menu :default-active="activeTab" style="height: 100%; border-right: none" @select="(key) => (activeTab = key)">
+              <el-menu-item index="dashboard">
+                <el-icon><DataLine /></el-icon>
+                <span>数据仪表板</span>
+              </el-menu-item>
+              <el-menu-item index="config">
+                <el-icon><Setting /></el-icon>
+                <span>系统配置</span>
+              </el-menu-item>
+            </el-menu>
+          </el-aside>
+          <el-main class="app-main">
+            <!-- 数据仪表板页面 -->
+            <div v-if="activeTab === 'dashboard'" class="page-container">
+              <!-- 顶部统计卡片 - 单行紧凑 -->
+              <el-row :gutter="8" class="stats-row" style="margin-bottom: 12px;">
+                <el-col :span="4" v-for="stat in dashboardStats" :key="stat.key">
+                  <el-statistic :title="stat.label" :value="stat.value">
+                    <template #suffix>
+                      <span v-if="stat.key === 'error_rate'" style="font-size: 12px;">%</span>
+                    </template>
+                  </el-statistic>
+                </el-col>
+              </el-row>
 
-          <!-- 总览页面 -->
-          <div v-if="activeTab === 'overview'">
-            <!-- 核心指标卡片 -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">总请求数</div>
-                    <div class="text-2xl font-bold text-white">{{ summary?.total_requests || 0 }}</div>
+              <!-- 中间区域：图表 + 最近事件 -->
+              <el-row :gutter="12" style="margin-bottom: 12px;">
+                <!-- 左侧图表 -->
+                <el-col :span="14">
+                  <el-row :gutter="12" style="margin-bottom: 12px;">
+                    <el-col :span="12">
+                      <el-card shadow="hover">
+                        <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">QPS 趋势</div>
+                        <div ref="qpsChart" style="height: 180px;"></div>
+                      </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-card shadow="hover">
+                        <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">状态码分布</div>
+                        <div ref="statusChart" style="height: 180px;"></div>
+                      </el-card>
+                    </el-col>
+                  </el-row>
+                  <el-row :gutter="12">
+                    <el-col :span="12">
+                      <el-card shadow="hover">
+                        <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">路由请求分布</div>
+                        <div ref="routeChart" style="height: 180px;"></div>
+                      </el-card>
+                    </el-col>
+                    <el-col :span="12">
+                      <el-card shadow="hover">
+                        <div style="font-weight: 600; margin-bottom: 8px; font-size: 13px;">响应时间分布</div>
+                        <div ref="latencyChart" style="height: 180px;"></div>
+                      </el-card>
+                    </el-col>
+                  </el-row>
+                </el-col>
+
+                <!-- 右侧最近事件列表 -->
+                <el-col :span="10">
+                  <el-card shadow="hover" style="height: 384px;">
+                    <template #header>
+                      <div class="card-header">
+                        <span>最近事件</span>
+                        <el-button size="small" text @click="resetStats">重置统计</el-button>
+                      </div>
+                    </template>
+                    <el-tabs type="border-card" size="small" style="height: calc(100% - 40px);">
+                      <el-tab-pane label="错误" style="height: 100%;">
+                        <el-table :data="errorsTableData" stripe size="small" :empty-text="'暂无错误'" style="width: 100%">
+                          <el-table-column prop="timestamp" label="时间" width="60" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="route" label="路由" min-width="70" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="status_code" label="状态" width="50" align="center">
+                            <template #default="scope">
+                              <el-tag :type="scope.row.status_code >= 500 ? 'danger' : 'warning'" size="small">{{ scope.row.status_code }}</el-tag>
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </el-tab-pane>
+                      <el-tab-pane label="请求">
+                        <el-table :data="requestsTableData" stripe size="small" :empty-text="'暂无请求'" style="width: 100%">
+                          <el-table-column prop="timestamp" label="时间" width="60" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="route" label="路由" min-width="70" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="status_code" label="状态" width="50" align="center">
+                            <template #default="scope">
+                              <el-tag :type="scope.row.status_code === 200 ? 'success' : 'danger'" size="small">{{ scope.row.status_code }}</el-tag>
+                            </template>
+                          </el-table-column>
+                          <el-table-column prop="latency_ms" label="ms" width="50" align="right"></el-table-column>
+                        </el-table>
+                      </el-tab-pane>
+                      <el-tab-pane label="视频任务">
+                        <el-table :data="videosTableData" stripe size="small" :empty-text="'暂无视频'" style="width: 100%">
+                          <el-table-column prop="timestamp" label="时间" width="60" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="task_id" label="任务ID" min-width="80" show-overflow-tooltip></el-table-column>
+                          <el-table-column prop="status" label="状态" width="55" align="center">
+                            <template #default="scope">
+                              <el-tag :type="scope.row.status === 'completed' ? 'success' : 'primary'" size="small">{{ scope.row.status }}</el-tag>
+                            </template>
+                          </el-table-column>
+                        </el-table>
+                      </el-tab-pane>
+                    </el-tabs>
+                  </el-card>
+                </el-col>
+              </el-row>
+
+              <!-- 底部路由统计表格 -->
+              <el-card shadow="hover">
+                <template #header>
+                  <div class="card-header">
+                    <span>路由统计详情</span>
+                    <el-button size="small" type="primary" text @click="loadRoutes">刷新</el-button>
                   </div>
-                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">QPS</div>
-                    <div class="text-2xl font-bold text-white">{{ summary?.current_qps?.toFixed(2) || '0' }}</div>
-                  </div>
-                  <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">错误率</div>
-                    <div class="text-2xl font-bold text-white">{{ ((summary?.error_rate || 0) * 100).toFixed(2) }}%</div>
-                  </div>
-                  <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">活跃请求</div>
-                    <div class="text-2xl font-bold text-white">{{ summary?.active_requests || 0 }}</div>
-                  </div>
-                  <svg class="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">活跃 SSE</div>
-                    <div class="text-2xl font-bold text-white">{{ summary?.active_sse || 0 }}</div>
-                  </div>
-                  <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:translate-y-[-2px] transition-transform">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <div class="text-gray-400 text-xs mb-1">视频任务</div>
-                    <div class="text-2xl font-bold text-white">{{ summary?.video_tasks || 0 }}</div>
-                  </div>
-                  <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-              </div>
+                </template>
+                <el-table :data="routesTableData" stripe size="small" :empty-text="routesTableData.length === 0 ? '暂无路由数据，请启动 Worker 并发送请求' : ''" style="width: 100%">
+                  <el-table-column prop="route" label="路由" min-width="120"></el-table-column>
+                  <el-table-column prop="requests" label="请求数" align="right" width="80" sortable></el-table-column>
+                  <el-table-column prop="successes" label="成功" align="right" width="70">
+                    <template #default="scope">
+                      <el-text type="success">{{ scope.row.successes }}</el-text>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="errors" label="错误" align="right" width="70">
+                    <template #default="scope">
+                      <el-text :type="scope.row.errors > 0 ? 'danger' : 'info'">{{ scope.row.errors }}</el-text>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="active" label="活跃" align="right" width="70"></el-table-column>
+                  <el-table-column prop="average_ms" label="平均 ms" align="right" width="90" sortable></el-table-column>
+                  <el-table-column prop="p50_ms" label="P50" align="right" width="70"></el-table-column>
+                  <el-table-column prop="p95_ms" label="P95" align="right" width="70"></el-table-column>
+                  <el-table-column prop="last_status" label="状态" align="center" width="80">
+                    <template #default="scope">
+                      <el-tag :type="scope.row.last_status === 200 ? 'success' : 'danger'" size="small">{{ scope.row.last_status }}</el-tag>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </el-card>
             </div>
 
-            <!-- Worker 信息和状态码分布 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div class="lg:col-span-2 bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    运行信息
-                  </h3>
+            <!-- 系统配置页面 -->
+            <div v-if="activeTab === 'config'" class="page-container">
+              <!-- 页面标题栏 -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div>
+                  <el-text size="large" style="font-weight: 600;">系统配置</el-text>
+                  <el-tag size="small" :type="runtime?.worker?.status === 'running' ? 'success' : 'danger'" style="margin-left: 8px;">
+                    {{ workerStatusText }}
+                  </el-tag>
                 </div>
-                <div class="p-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">Worker 地址</span>
-                      <span class="text-white text-xs font-mono">{{ runtime?.worker?.public_base || '-' }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">PProf 地址</span>
-                      <span class="text-white text-xs font-mono">{{ runtime?.worker?.pprof_url || '未启用' }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">鉴权要求</span>
-                      <span class="text-white text-xs">{{ runtime?.config?.worker?.require_auth ? '已启用' : '未启用' }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">随机模式</span>
-                      <span class="text-white text-xs">{{ runtime?.config?.random?.mode }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">模型数量</span>
-                      <span class="text-white text-xs">{{ runtime?.config?.worker?.models?.length || 0 }}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-700">
-                      <span class="text-gray-400 text-xs">数据目录</span>
-                      <span class="text-white text-xs font-mono">{{ runtime?.data_dir }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                    </svg>
-                    状态码分布
-                  </h3>
-                </div>
-                <div class="p-4 flex flex-wrap gap-2">
-                  <el-tag v-if="Object.keys(summary?.status_codes || {}).length === 0" type="info" size="small">暂无数据</el-tag>
-                  <el-tag v-for="(count, code) in sortedStatusCodes" :key="code" size="small" type="primary">{{ code }} · {{ count }}</el-tag>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 服务控制页面 -->
-          <div v-if="activeTab === 'service'">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    Worker 控制
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <div class="flex gap-2 mb-4">
-                    <el-button type="success" @click="workerAction('/api/worker/start', 'Worker 已启动')">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      启动
-                    </el-button>
-                    <el-button type="danger" @click="workerAction('/api/worker/stop', 'Worker 已停止')">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                      停止
-                    </el-button>
-                    <el-button type="warning" @click="workerAction('/api/worker/restart', 'Worker 已重启')">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                      重启
-                    </el-button>
-                  </div>
-                  <el-form label-width="120px" label-position="left">
-                    <el-form-item label="Worker 端口">
-                      <el-input-number v-model="config.worker.port" :min="1" :max="65535" />
-                    </el-form-item>
-                    <el-form-item label="PProf 端口">
-                      <el-input-number v-model="config.worker.pprof_port" :min="1" :max="65535" />
-                    </el-form-item>
-                    <el-form-item label="要求 API Key">
-                      <el-switch v-model="config.worker.require_auth" />
-                    </el-form-item>
-                    <el-form-item v-if="config.worker.require_auth" label="API Key">
-                      <el-input v-model="config.worker.management_token" placeholder="留空将自动生成" show-password />
-                    </el-form-item>
-                    <el-form-item label="启用 PProf">
-                      <el-switch v-model="config.worker.enable_pprof" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div>
-                <div class="bg-gray-800 rounded-lg border border-gray-700 mb-4">
-                  <div class="px-4 py-3 border-b border-gray-700">
-                    <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                      </svg>
-                      配置管理
-                    </h3>
-                  </div>
-                  <div class="p-4">
-                    <p class="text-gray-400 text-sm mb-4">修改配置后点击保存，配置将写入 JSON 文件。部分配置需要重启 Worker 才能生效。</p>
-                    <el-button type="primary" @click="saveConfig">
-                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                      保存配置
-                    </el-button>
-                  </div>
-                </div>
-                <div class="bg-gray-800 rounded-lg border border-gray-700">
-                  <div class="px-4 py-3 border-b border-gray-700">
-                    <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
-                      </svg>
-                      支持的模型
-                    </h3>
-                  </div>
-                  <div class="p-4">
-                    <el-input v-model="modelsText" type="textarea" :rows="4" class="font-mono text-xs" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 全局随机页面 -->
-          <div v-if="activeTab === 'random'">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                    </svg>
-                    随机模式
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="80px">
-                    <el-form-item label="模式">
-                      <el-select v-model="config.random.mode">
-                        <el-option label="true_random（真随机）" value="true_random" />
-                        <el-option label="seeded（固定种子）" value="seeded" />
-                      </el-select>
-                    </el-form-item>
-                    <el-form-item label="种子">
-                      <el-input-number v-model="config.random.seed" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    延迟配置
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="80px">
-                    <el-form-item label="最小(ms)">
-                      <el-input-number v-model="config.random.latency_ms.min" :min="0" />
-                    </el-form-item>
-                    <el-form-item label="最大(ms)">
-                      <el-input-number v-model="config.random.latency_ms.max" :min="0" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    错误率
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="80px">
-                    <el-form-item label="通用">
-                      <el-input-number v-model="config.random.error_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="429">
-                      <el-input-number v-model="config.random.too_many_requests_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="500">
-                      <el-input-number v-model="config.random.server_error_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="超时">
-                      <el-input-number v-model="config.random.timeout_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm">Token 长度</h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="80px">
-                    <el-form-item label="最小值">
-                      <el-input-number v-model="config.random.default_token_length.min" :min="1" />
-                    </el-form-item>
-                    <el-form-item label="最大值">
-                      <el-input-number v-model="config.random.default_token_length.max" :min="1" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm">SSE 分块</h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="80px">
-                    <el-form-item label="最小块数">
-                      <el-input-number v-model="config.random.default_stream_chunks.min" :min="1" />
-                    </el-form-item>
-                    <el-form-item label="最大块数">
-                      <el-input-number v-model="config.random.default_stream_chunks.max" :min="1" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 对话配置页面 -->
-          <div v-if="activeTab === 'conversation'">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                    </svg>
-                    Chat 配置
-                  </h3>
-                  <el-switch v-model="config.chat.allow_stream" active-text="流式" inactive-text="关闭" size="small" />
-                </div>
-                <div class="p-4">
-                  <el-form label-width="100px" label-position="left">
-                    <el-form-item label="Token 范围">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.chat.text_tokens.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.chat.text_tokens.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="Usage 概率">
-                      <el-input-number v-model="config.chat.usage_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="Tool 概率">
-                      <el-input-number v-model="config.chat.tool_call_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="MCP 概率">
-                      <el-input-number v-model="config.chat.mcp_tool_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="Tool 数量">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.chat.tool_call_count.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.chat.tool_call_count.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="参数字节">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.chat.tool_arguments_bytes.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.chat.tool_arguments_bytes.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="最终回答">
-                      <el-input-number v-model="config.chat.final_answer_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="指纹字段">
-                      <el-input-number v-model="config.chat.system_fingerprint_chance" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                    </svg>
-                    Responses 配置
-                  </h3>
-                  <el-switch v-model="config.responses.allow_stream" active-text="流式" inactive-text="关闭" size="small" />
-                </div>
-                <div class="p-4">
-                  <el-form label-width="100px" label-position="left">
-                    <el-form-item label="Token 范围">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.responses.text_tokens.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.responses.text_tokens.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="Usage 概率">
-                      <el-input-number v-model="config.responses.usage_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="Tool 概率">
-                      <el-input-number v-model="config.responses.tool_call_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="MCP 概率">
-                      <el-input-number v-model="config.responses.mcp_tool_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="Tool 数量">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.responses.tool_call_count.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.responses.tool_call_count.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="参数字节">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.responses.tool_arguments_bytes.min" :min="1" placeholder="最小" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.responses.tool_arguments_bytes.max" :min="1" placeholder="最大" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="最终回答">
-                      <el-input-number v-model="config.responses.final_answer_probability" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="指纹字段">
-                      <el-input-number v-model="config.responses.system_fingerprint_chance" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 媒体配置页面 -->
-          <div v-if="activeTab === 'media'">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    图片配置
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="100px">
-                    <el-form-item label="尺寸列表">
-                      <el-input v-model="imageSizesText" type="textarea" :rows="3" placeholder="每行一个" class="font-mono text-xs" />
-                    </el-form-item>
-                    <el-form-item label="水印文本">
-                      <el-input v-model="imageWatermarksText" type="textarea" :rows="2" class="font-mono text-xs" />
-                    </el-form-item>
-                    <el-form-item label="背景色板">
-                      <el-input v-model="imagePaletteText" type="textarea" :rows="2" class="font-mono text-xs" />
-                    </el-form-item>
-                    <el-form-item label="返回 URL">
-                      <el-input-number v-model="config.images.response_url_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="添加水印">
-                      <el-input-number v-model="config.images.watermark_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="图片数量">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.images.image_count.min" :min="1" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.images.image_count.max" :min="1" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="图片字节">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.images.image_bytes.min" :min="1024" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.images.image_bytes.max" :min="1024" />
-                      </div>
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                    视频配置
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-form label-width="100px">
-                    <el-form-item label="时长范围">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.videos.durations_seconds.min" :min="0.5" :step="0.1" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.videos.durations_seconds.max" :min="0.5" :step="0.1" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="失败概率">
-                      <el-input-number v-model="config.videos.failure_rate" :min="0" :max="1" :step="0.001" :precision="3" />
-                    </el-form-item>
-                    <el-form-item label="分辨率">
-                      <el-input v-model="videoResolutionsText" type="textarea" :rows="3" placeholder="每行一个" class="font-mono text-xs" />
-                    </el-form-item>
-                    <el-form-item label="FPS 范围">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.videos.fps.min" :min="1" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.videos.fps.max" :min="1" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="轮询间隔">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.videos.poll_interval_ms.min" :min="100" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.videos.poll_interval_ms.max" :min="100" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="视频字节">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.videos.video_bytes.min" :min="1024" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.videos.video_bytes.max" :min="1024" />
-                      </div>
-                    </el-form-item>
-                    <el-form-item label="进度抖动">
-                      <div class="flex gap-2">
-                        <el-input-number v-model="config.videos.progress_jitter.min" :min="0" />
-                        <span class="text-gray-400">-</span>
-                        <el-input-number v-model="config.videos.progress_jitter.max" :min="0" />
-                      </div>
-                    </el-form-item>
-                  </el-form>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 数据统计页面 -->
-          <div v-if="activeTab === 'data'">
-            <div class="bg-gray-800 rounded-lg border border-gray-700 mb-4">
-              <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
-                <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
-                  </svg>
-                  路由统计
-                </h3>
-                <el-button size="small" @click="resetStats">
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  重置
+                <el-button type="primary" @click="saveConfig" :loading="saving">
+                  <el-icon><Check /></el-icon>保存配置
                 </el-button>
               </div>
-              <div class="p-4">
-                <el-table :data="routesTableData" stripe class="w-full">
-                  <el-table-column prop="route" label="路由" />
-                  <el-table-column prop="requests" label="请求数" align="right" />
-                  <el-table-column prop="success" label="成功数" align="right" />
-                  <el-table-column prop="errors" label="错误数" align="right" />
-                  <el-table-column prop="active" label="活跃中" align="right" />
-                  <el-table-column prop="avg_ms" label="平均 ms" align="right" />
-                  <el-table-column prop="p50" label="P50" align="right" />
-                  <el-table-column prop="p95" label="P95" align="right" />
-                  <el-table-column prop="last_status" label="最后状态" align="center" />
-                </el-table>
-              </div>
-            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    最近错误
-                  </h3>
+              <!-- Worker 配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><Cpu /></el-icon>
+                    <el-text style="font-weight: 600;">Worker 服务</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="Worker 端口">
+                        <el-input-number v-model="config.worker.port" :min="1" :max="65535" />
+                      </el-form-item>
+                      <el-form-item label="PProf 端口">
+                        <el-input-number v-model="config.worker.pprof_port" :min="1" :max="65535" />
+                      </el-form-item>
+                      <el-form-item label="要求 API Key">
+                        <el-switch v-model="config.worker.require_auth" />
+                      </el-form-item>
+                      <el-form-item v-if="config.worker.require_auth" label="API Key">
+                        <el-input v-model="config.worker.management_token" placeholder="留空将自动生成" show-password style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="启用 PProf">
+                        <el-switch v-model="config.worker.enable_pprof" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="100px">
+                      <el-form-item label="支持的模型">
+                        <el-input v-model="modelsText" type="textarea" :rows="6" placeholder="每行一个模型名称" class="mono-input" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+                <div style="border-top: 1px solid var(--el-border-color-lighter); margin-top: 16px; padding-top: 12px; display: flex; gap: 12px;">
+                  <el-button type="success" @click="workerAction('/api/worker/start', 'Worker 已启动')" :disabled="runtime?.worker?.status === 'running'">
+                    <el-icon><VideoPlay /></el-icon>启动
+                  </el-button>
+                  <el-button type="danger" @click="workerAction('/api/worker/stop', 'Worker 已停止')" :disabled="runtime?.worker?.status === 'stopped'">
+                    <el-icon><VideoPause /></el-icon>停止
+                  </el-button>
+                  <el-button type="warning" @click="workerAction('/api/worker/restart', 'Worker 已重启')">
+                    <el-icon><RefreshRight /></el-icon>重启
+                  </el-button>
                 </div>
-                <div class="p-4">
-                  <el-table :data="errorsTableData" stripe size="small" />
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                    </svg>
-                    最近请求
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-table :data="requestsTableData" stripe size="small" />
-                </div>
-              </div>
-              <div class="bg-gray-800 rounded-lg border border-gray-700">
-                <div class="px-4 py-3 border-b border-gray-700">
-                  <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                    </svg>
-                    最近视频任务
-                  </h3>
-                </div>
-                <div class="p-4">
-                  <el-table :data="videosTableData" stripe size="small" />
-                </div>
-              </div>
-            </div>
-          </div>
-      </div>
-    </div>
-    </div>
+              </el-card>
 
+              <!-- 全局随机配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><Dice /></el-icon>
+                    <el-text style="font-weight: 600;">全局随机配置</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="随机模式">
+                        <el-select v-model="config.random.mode" style="width: 200px;">
+                          <el-option label="真随机" value="true_random" />
+                          <el-option label="伪随机" value="pseudo_random" />
+                          <el-option label="确定性随机" value="deterministic" />
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item label="随机种子">
+                        <el-input-number v-model="config.random.seed" :min="1" :max="2147483647" />
+                      </el-form-item>
+                      <el-form-item label="延迟范围 (ms)">
+                        <el-space>
+                          <el-input-number v-model="config.random.latency_ms.min" :min="0" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.random.latency_ms.max" :min="0" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="Token 长度范围">
+                        <el-space>
+                          <el-input-number v-model="config.random.default_token_length.min" :min="1" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.random.default_token_length.max" :min="1" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="流式分块范围">
+                        <el-space>
+                          <el-input-number v-model="config.random.default_stream_chunks.min" :min="1" :max="100" />
+                          <span>-</span>
+                          <el-input-number v-model="config.random.default_stream_chunks.max" :min="1" :max="100" />
+                        </el-space>
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="错误率">
+                        <el-slider v-model="config.random.error_rate" :min="0" :max="1" :step="0.001" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="请求过多率">
+                        <el-slider v-model="config.random.too_many_requests_rate" :min="0" :max="1" :step="0.001" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="服务器错误率">
+                        <el-slider v-model="config.random.server_error_rate" :min="0" :max="1" :step="0.001" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="超时率">
+                        <el-slider v-model="config.random.timeout_rate" :min="0" :max="1" :step="0.001" show-input style="width: 300px;" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+              </el-card>
+
+              <!-- Chat 配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><ChatDotRound /></el-icon>
+                    <el-text style="font-weight: 600;">Chat 对话配置</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="Token 长度范围">
+                        <el-space>
+                          <el-input-number v-model="config.chat.text_tokens.min" :min="1" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.chat.text_tokens.max" :min="1" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="允许流式">
+                        <el-switch v-model="config.chat.allow_stream" />
+                      </el-form-item>
+                      <el-form-item label="Usage 概率">
+                        <el-slider v-model="config.chat.usage_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="Tool Call 概率">
+                        <el-slider v-model="config.chat.tool_call_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="Tool Call 数量">
+                        <el-space>
+                          <el-input-number v-model="config.chat.tool_call_count.min" :min="1" :max="10" />
+                          <span>-</span>
+                          <el-input-number v-model="config.chat.tool_call_count.max" :min="1" :max="10" />
+                        </el-space>
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="Tool 参数字节">
+                        <el-space>
+                          <el-input-number v-model="config.chat.tool_arguments_bytes.min" :min="1" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.chat.tool_arguments_bytes.max" :min="1" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="MCP Tool 概率">
+                        <el-slider v-model="config.chat.mcp_tool_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="最终回答概率">
+                        <el-slider v-model="config.chat.final_answer_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="系统指纹概率">
+                        <el-slider v-model="config.chat.system_fingerprint_chance" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+              </el-card>
+
+              <!-- Responses 配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><Message /></el-icon>
+                    <el-text style="font-weight: 600;">Responses 对话配置</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="Token 长度范围">
+                        <el-space>
+                          <el-input-number v-model="config.responses.text_tokens.min" :min="1" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.responses.text_tokens.max" :min="1" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="允许流式">
+                        <el-switch v-model="config.responses.allow_stream" />
+                      </el-form-item>
+                      <el-form-item label="Usage 概率">
+                        <el-slider v-model="config.responses.usage_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="Tool Call 概率">
+                        <el-slider v-model="config.responses.tool_call_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="Tool Call 数量">
+                        <el-space>
+                          <el-input-number v-model="config.responses.tool_call_count.min" :min="1" :max="10" />
+                          <span>-</span>
+                          <el-input-number v-model="config.responses.tool_call_count.max" :min="1" :max="10" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="Tool 参数字节">
+                        <el-space>
+                          <el-input-number v-model="config.responses.tool_arguments_bytes.min" :min="1" :max="10000" />
+                          <span>-</span>
+                          <el-input-number v-model="config.responses.tool_arguments_bytes.max" :min="1" :max="10000" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="MCP Tool 概率">
+                        <el-slider v-model="config.responses.mcp_tool_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="最终回答概率">
+                        <el-slider v-model="config.responses.final_answer_probability" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+              </el-card>
+
+              <!-- 图片配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><Picture /></el-icon>
+                    <el-text style="font-weight: 600;">图片生成配置</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="尺寸列表">
+                        <el-input v-model="imageSizesText" type="textarea" :rows="3" placeholder="每行一个，如 1024x1024" class="mono-input" />
+                      </el-form-item>
+                      <el-form-item label="水印文本">
+                        <el-input v-model="imageWatermarksText" type="textarea" :rows="2" placeholder="每行一个水印文本" class="mono-input" />
+                      </el-form-item>
+                      <el-form-item label="背景色板">
+                        <el-input v-model="imagePaletteText" type="textarea" :rows="2" placeholder="每行一个颜色代码" class="mono-input" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="返回 URL 概率">
+                        <el-slider v-model="config.images.response_url_rate" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="添加水印概率">
+                        <el-slider v-model="config.images.watermark_rate" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="图片数量范围">
+                        <el-space>
+                          <el-input-number v-model="config.images.image_count.min" :min="1" :max="10" />
+                          <span>-</span>
+                          <el-input-number v-model="config.images.image_count.max" :min="1" :max="10" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="图片字节范围">
+                        <el-space>
+                          <el-input-number v-model="config.images.image_bytes.min" :min="1024" :max="1000000" :step="1024" />
+                          <span>-</span>
+                          <el-input-number v-model="config.images.image_bytes.max" :min="1024" :max="1000000" :step="1024" />
+                        </el-space>
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+              </el-card>
+
+              <!-- 视频配置 -->
+              <el-card shadow="hover" style="margin-bottom: 16px;">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><VideoCamera /></el-icon>
+                    <el-text style="font-weight: 600;">视频生成配置</el-text>
+                  </div>
+                </template>
+                <el-row :gutter="24">
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="时长范围 (秒)">
+                        <el-space>
+                          <el-input-number v-model="config.videos.durations_seconds.min" :min="0.5" :max="60" :step="0.5" />
+                          <span>-</span>
+                          <el-input-number v-model="config.videos.durations_seconds.max" :min="0.5" :max="60" :step="0.5" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="失败概率">
+                        <el-slider v-model="config.videos.failure_rate" :min="0" :max="1" :step="0.01" show-input style="width: 300px;" />
+                      </el-form-item>
+                      <el-form-item label="分辨率列表">
+                        <el-input v-model="videoResolutionsText" type="textarea" :rows="3" placeholder="每行一个，如 1920x1080" class="mono-input" />
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                  <el-col :span="12">
+                    <el-form label-width="120px">
+                      <el-form-item label="FPS 范围">
+                        <el-space>
+                          <el-input-number v-model="config.videos.fps.min" :min="1" :max="120" />
+                          <span>-</span>
+                          <el-input-number v-model="config.videos.fps.max" :min="1" :max="120" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="轮询间隔 (ms)">
+                        <el-space>
+                          <el-input-number v-model="config.videos.poll_interval_ms.min" :min="100" :max="10000" :step="100" />
+                          <span>-</span>
+                          <el-input-number v-model="config.videos.poll_interval_ms.max" :min="100" :max="10000" :step="100" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="视频字节范围">
+                        <el-space>
+                          <el-input-number v-model="config.videos.video_bytes.min" :min="1024" :max="10000000" :step="1024" />
+                          <span>-</span>
+                          <el-input-number v-model="config.videos.video_bytes.max" :min="1024" :max="10000000" :step="1024" />
+                        </el-space>
+                      </el-form-item>
+                      <el-form-item label="进度抖动范围">
+                        <el-space>
+                          <el-input-number v-model="config.videos.progress_jitter.min" :min="0" :max="100" />
+                          <span>-</span>
+                          <el-input-number v-model="config.videos.progress_jitter.max" :min="0" :max="100" />
+                        </el-space>
+                      </el-form-item>
+                    </el-form>
+                  </el-col>
+                </el-row>
+              </el-card>
+
+              <!-- 运行信息 -->
+              <el-card shadow="hover">
+                <template #header>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <el-icon><InfoFilled /></el-icon>
+                    <el-text style="font-weight: 600;">运行信息</el-text>
+                  </div>
+                </template>
+                <el-descriptions :column="3" size="small" border>
+                  <el-descriptions-item label="Worker 地址">{{ runtime?.worker?.public_base || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="PProf 地址">{{ runtime?.worker?.pprof_url || '未启用' }}</el-descriptions-item>
+                  <el-descriptions-item label="数据目录">{{ runtime?.data_dir || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="控制端口">{{ runtime?.control_port || '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="启动时间">{{ runtime?.worker?.start_time ? new Date(runtime.worker.start_time).toLocaleString() : '-' }}</el-descriptions-item>
+                  <el-descriptions-item label="运行状态">{{ workerStatusText }}</el-descriptions-item>
+                </el-descriptions>
+              </el-card>
+            </div>
+          </el-main>
+        </el-container>
+      </el-container>
+    </div>
     <script src="/assets/app.js"></script>
   </body>
 </html>
